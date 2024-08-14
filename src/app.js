@@ -11,11 +11,11 @@ app.use(express.json({ limit: '1mb' }))
 import { userRouter } from './routes/user.routes.js'
 import { authRouter } from './routes/auth.routes.js'
 import { vehicleRouter } from './routes/vehicle.routes.js'
-import { riderRouter } from './routes/rider.routes.js'
+import { driverRouter } from './routes/driver.routes.js'
 
 app.use('/api/v1/auth', authRouter)
 app.use('/api/v1/user', userRouter)
-app.use('/api/v1/rider', riderRouter)
+app.use('/api/v1/driver', driverRouter)
 app.use('/api/v1/vehicle', vehicleRouter)
 
 

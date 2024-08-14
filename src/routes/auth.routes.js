@@ -6,7 +6,7 @@ export const authRouter = Router()
 
 authRouter.route('/register').post(auth.register)
 authRouter.route('/login').post(auth.login)
-authRouter.route('/verify-otp').post(auth_middleware.check_user_role(['rider', 'passenger']), auth.verify_otp)
+authRouter.route('/verify-otp').post(auth_middleware.check_user_role(['driver', 'passenger']), auth.verify_otp)
 
 
 authRouter.route('/test').get(auth.test)

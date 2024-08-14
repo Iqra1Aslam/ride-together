@@ -13,7 +13,7 @@ const userSchema = new Schema(
         },
         role: {
             type: String,
-            enum: ['rider', 'passenger', 'admin'],
+            enum: ['driver', 'passenger', 'admin'],
             default: 'passenger'
         },
         phone_number: {
@@ -38,7 +38,19 @@ const userSchema = new Schema(
         },
         password: {
             type: String
+        }, 
+        user_location: {
+            type: {
+                type: String,
+                enum: ['Point'],
+                default: 'Point'
+            },
+            coordinates: {
+                type: [Number],
+                default: [0, 0]
+            }
         }
+        
     },
     {
         timestamps: true

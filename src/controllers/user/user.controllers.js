@@ -13,7 +13,7 @@ export const user = {
         //validation
         const userValidationSchema = Joi.object({
             city: Joi.string().valid('Lahore').required(),
-            role: Joi.string().valid('rider', 'passenger').required(),
+            role: Joi.string().valid('driver', 'passenger').required(),
             full_name: Joi.string().min(3).max(15).required(),
             phone_number: Joi.string().min(11).max(11).required()
         })
@@ -37,30 +37,39 @@ export const user = {
 
     }),
 
-    user_profile_image_add: asyncHandler(async (req, res) => {
-        const user_id = req.user_id
-        const image = req.file
 
-        const profile_image = await upload_single_on_cloudinary(image)
-        // check inside profile_image exist url or not
-        const user = await User.findByIdAndUpdate(
-            user_id,
-            { profile_image: profile_image?.url }
-        )
-        res.status(200).json(new ApiResponse(200, {}, 'user profile updated'))
-    }),
+    user_profile_image_add: asyncHandler(async (req, res) => {
+        const user_id = req.user_id;
+        const image = req.file;
+    
+        const profile_image = await upload_single_on_cloudinary(image);
+        const updatedUser = await User.findByIdAndUpdate(
+          user_id,
+          { profile_image: profile_image?.url }
+        );
+        res.status(200).json(new ApiResponse(200, {}, 'User profile updated'));
+      }),
+    
 
     user_details_update: asyncHandler(async (req, res) => {
-        const { full_name, profile_image, city, role, phone_number, email, address, password } = req.body
+        const { full_name, profile_image, city, role, phone_number, email, address, password , user_location} = req.body
         // validation (joi)
         const userValidationSchema = Joi.object({
             full_name: Joi.string(),
             profile_image: Joi.string(),
             city: Joi.string().valid('Lahore'),
-            role: Joi.string().valid('rider', 'passenger'),
+            role: Joi.string().valid('driver', 'passenger'),
             phone_number: Joi.string().required().min(10).max(13).pattern(/^[0-9]+$/),
             email: Joi.string().email(),
             address: Joi.string(),
+           
+            user_location: Joi.object({
+                type: Joi.string().valid('Point').required(),
+                coordinates: Joi.array().items(
+                    Joi.number().min(-180).max(180), // Longitude
+                    Joi.number().min(-90).max(90)    // Latitude
+                ).length(2).required()
+            }).required(),
             password: Joi.string().min(8).max(15)
         })
         const { error } = userValidationSchema.validate(req.body)
