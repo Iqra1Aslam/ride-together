@@ -1,4 +1,6 @@
 import { Vehicle } from "../../models/driver.models.js";
+
+import { publishRide } from "../../models/publishRide.models.js";
 import { ApiResponse } from "../../services/ApiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import { upload_single_on_cloudinary, upload_multiple_on_cloudinary } from "../../utils/cloudinary.js";
@@ -123,7 +125,121 @@ export const vehicle = {
           console.error('Error finding nearest vehicles:', err);
           res.status(500).json({ error: 'Error finding nearest vehicles' });
       }
+    //   updated code 
+    //   try {
+    //     const { passengerLocation, requestedTime } = req.body;
+    
+    //     // Convert requestedTime to a Date object
+    //     const requestedDate = new Date(requestedTime);
+    
+    //     // Calculate the time range: 15 minutes before and after the requested time
+    //     const timeBefore = new Date(requestedDate);
+    //     timeBefore.setMinutes(requestedDate.getMinutes() - 15);
+    
+    //     const timeAfter = new Date(requestedDate);
+    //     timeAfter.setMinutes(requestedDate.getMinutes() + 15);
+    
+    //     // Find nearby rides within 5km and within the specified time range
+    //     const nearbyRides = await Ride.aggregate([
+    //       {
+    //         $geoNear: {
+    //           near: {
+    //             type: 'Point',
+    //             coordinates: [parseFloat(passengerLocation.longitude), parseFloat(passengerLocation.latitude)],
+    //           },
+    //           distanceField: 'distance',
+    //           maxDistance: 5000, // 5km radius
+    //           spherical: true,
+    //           key: 'pickup_location', // Geospatial index field
+    //         },
+    //       },
+    //       {
+    //         $match: {
+    //           pickup_time: {
+    //             $gte: timeBefore,
+    //             $lte: timeAfter,
+    //           },
+    //         },
+    //       },
+    //     ]);
+    
+    //     if (nearbyRides.length === 0) {
+    //       return res.status(404).json({ message: 'No rides found nearby' });
+    //     }
+    
+    //     res.json(nearbyRides);
+    //   } catch (err) {
+    //     console.error('Error finding nearby rides:', err);
+    //     res.status(500).json({ error: 'Failed to find nearby rides' });
+    //   }
+      
+  }),
+  publish_ride: asyncHandler(async (req,res)=>{
+    const { pickupLocation, dropLocation, date,time, numSeats, pricePerSeat } = req.body
+    const driverId = req.user_id;
+
+    // Validate the input
+    if (!pickupLocation || !dropLocation || !date || !time ||  !numSeats || !pricePerSeat) {
+        return res.status(400).json(new ApiResponse(400, 'All fields are required'))
+    }
+    // Create a new ride offer
+    const ride = new publishRide({
+        pickupLocation,
+        dropLocation,
+        time,
+        date,
+        numSeats,
+        pricePerSeat,
+        status: 'waiting',
+        driverId: driverId 
+        
+    });
+     // Check if the ride status is 'waiting'
+if (ride.status !== 'waiting') {
+    return res.status(400).json({ message: 'Ride is already matched or completed' });
+  }
+
+  // Save the ride to the database
+     await ride.save();
+
+    return res.status(201).json(new ApiResponse(201,{ride},'Ride created successfully'))
+    
+}),
+fetch_ride: asyncHandler(async (req, res) => {
+    
+    const passengers = await publishRide.find({ status: 'waiting' });
+    res.json(passengers);
+  }),
+  //select ride
+  select_ride: asyncHandler(async (req, res) => {
+  
+    const rider_id = req.body
+    const userId=req.body
+
+    // Validate ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(rider_id)) {
+      return res.status(400).json({ message: 'Invalid passengerId or driverId' });
+    }
+
+    // Find the passenger's ride by ID
+    const ride = await publishRide.findById(passengerId);
+    if (!ride) {
+      return res.status(404).json({ message: 'Ride not found' });
+    }
+
+    // Check if the ride status is 'waiting'
+    if (ride.status !== 'waiting') {
+      return res.status(400).json({ message: 'Passenger already matched or completed' });
+    }
+
+    // Update the ride status to 'matched'
+    ride.status = 'matched';
+    ride.rider_id = mongoose.Types.ObjectId(rider_id); // Assign the driverId
+    await ride.save();
+
+    return res.status(200).json({ message: 'Ride matched successfully', ride });
   })
+  
 
     
 

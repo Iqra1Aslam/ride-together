@@ -6,7 +6,7 @@ import { vehicle } from '../controllers/vehicle/vehicle.controllers.js';
 
 export const vehicleRouter = Router();
 
-vehicleRouter.route('/vehicle_details_add').patch(auth_middleware.check_user_role(['passenger', 'driver']), vehicle.vehicle_details_add);
+vehicleRouter.route('/vehicle_details_add').post(auth_middleware.check_user_role(['passenger', 'driver']), vehicle.vehicle_details_add);
 vehicleRouter.route('/vehicle-verification').patch(auth_middleware.check_user_role(['driver', 'admin']), vehicle.vehicle_verification)
 vehicleRouter.route('/vehicle-images-upload').patch(auth_middleware.check_user_role(['admin', 'driver']), upload.fields([
     {
