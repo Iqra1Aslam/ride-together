@@ -91,7 +91,7 @@ nearby_drivers : asyncHandler(async (req, res) => {
         console.error('Error fetching nearby drivers:', error);
         res.status(500).send({ success: false, message: 'Error fetching nearby drivers', error: error.message });
     }
-})
+}),
 
 
 

@@ -15,8 +15,8 @@ const publishRideSchema = new Schema({
     coordinates: [Number], // [longitude, latitude]
   },
   dropLocation: {
-    type: String,
-    required: true
+    type: { type: String, default: 'Point' },
+    coordinates: [Number],
   },
   time: {
     type: Date,
