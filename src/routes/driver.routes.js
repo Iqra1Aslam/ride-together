@@ -10,5 +10,10 @@ export const driverRouter = Router();
 
 
 driverRouter.route('/driver-verification').patch(auth_middleware.check_user_role(['driver','admin']), driver. driver_verification)
-driverRouter.route('/driver-lisence-img/:id').patch(upload.single('lisence_image'), auth_middleware.check_user_role(['passenger', 'driver', 'admin']), driver.driver_lisence_image_add);
-driverRouter.route('/nearby_drivers').post(driver.nearby_drivers)
+driverRouter.route('/driver-details/:id')
+  .post(
+    upload.single('license_image'), 
+    auth_middleware.check_user_role(['driver', 'admin']), 
+    driver.driver_details_add
+  );
+

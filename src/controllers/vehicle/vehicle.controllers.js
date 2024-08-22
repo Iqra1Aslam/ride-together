@@ -177,6 +177,10 @@ export const vehicle = {
   publish_ride: asyncHandler(async (req,res)=>{
     const { pickupLocation, dropLocation, date,time,numSeats, pricePerSeat } = req.body
     const driverId = req.user_id;
+    if (req.user.role !== 'driver') {
+      return res.status(403).json(new ApiResponse(403, {}, 'Forbidden: Only drivers can publish rides'));
+  }
+  
 
     // Validate the input
     if (!pickupLocation || !dropLocation || !date || !time ||  !numSeats || !pricePerSeat) {
