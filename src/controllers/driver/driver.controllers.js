@@ -5,7 +5,7 @@ import { upload_single_on_cloudinary } from "../../utils/cloudinary.js";
 
 export const driver = {
     driver_details_add: asyncHandler(async (req, res) => {
-        const user_id = req.user_id;
+        const user_id = req.user_id; // This should be retrieved from the authenticated user's session
         const { name, phone, cnic } = req.body;
         const image = req.file;
 
@@ -24,7 +24,7 @@ export const driver = {
                 phone: phone,
                 cnic: cnic 
             },
-            { new: true, upsert: true }
+            { new: true, upsert: true } // If the driver profile doesn't exist, it will be created
         );
 
         res.status(200).json(new ApiResponse(200, { driver }, 'Driver details updated successfully'));
