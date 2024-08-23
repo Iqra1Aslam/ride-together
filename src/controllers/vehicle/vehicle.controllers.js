@@ -26,8 +26,7 @@ export const vehicle = {
     const { error } = vehicle_validationSchema.validate(req.body);
     if (error) return res.status(400).json(new ApiResponse(error.code || 400, error, error.message));
 
-    // Extract coordinates
-    const { coordinates } = location;
+   
 
     // Create a new vehicle entry
     const vehicle = await Vehicle.create({
