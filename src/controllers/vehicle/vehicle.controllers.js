@@ -9,7 +9,7 @@ import Joi from 'joi'
 
 export const vehicle = {
   vehicle_details_add: asyncHandler(async (req, res) => {
-    const { car_type, vehicle_model, vehicle_plate_number, number_of_seats, location, vehicle_color } = req.body;
+    const { car_type, vehicle_model, vehicle_plate_number, number_of_seats, vehicle_color } = req.body;
     const driver = req.user_id;
 
     // Validation schema
@@ -18,13 +18,7 @@ export const vehicle = {
         vehicle_model: Joi.string().required(),
         vehicle_plate_number: Joi.string().required(),
         number_of_seats: Joi.number().integer().min(1).required(),
-        location: Joi.object({
-            type: Joi.string().valid('Point').required(),
-            coordinates: Joi.array().items(
-                Joi.number().min(-180).max(180), // Longitude
-                Joi.number().min(-90).max(90)    // Latitude
-            ).length(2).required()
-        }).required(),
+        
         vehicle_color: Joi.string().required()
     });
 
@@ -43,10 +37,7 @@ export const vehicle = {
         vehicle_plate_number,
         number_of_seats,
         vehicle_color,
-        location: {
-            type: 'Point',
-            coordinates: coordinates
-        }
+       
     });
 
     // Send response
