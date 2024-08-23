@@ -8,14 +8,21 @@ export const driver = {
         const user_id = req.user_id; // This should be retrieved from the authenticated user's session
         const { name, phone, cnic } = req.body;
         const image = req.file;
-
+    
         let profile_image_url = null;
-
+    
         if (image) {
-            const profile_image = await upload_single_on_cloudinary(image);
-            profile_image_url = profile_image?.url;
+            // Ensure you're passing the correct path as a string
+            try {
+                const profile_image = await upload_single_on_cloudinary(image.path);
+                profile_image_url = profile_image?.url;
+                console.log("Uploaded image URL:", profile_image_url); // Log for debugging
+            } catch (error) {
+                console.error("Error uploading image:", error);
+                return res.status(500).json({ success: false, message: "Failed to upload image" });
+            }
         }
-
+    
         const driver = await Driver.findOneAndUpdate(
             { driver: user_id },
             { 
@@ -26,10 +33,10 @@ export const driver = {
             },
             { new: true, upsert: true } // If the driver profile doesn't exist, it will be created
         );
-
+    
         res.status(200).json(new ApiResponse(200, { driver }, 'Driver details updated successfully'));
     }),
-
+    
     driver_verification: asyncHandler(async (req, res) => {
         const { is_verified } = req.body;
         const user_id = req.user_id;
