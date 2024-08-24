@@ -34,7 +34,7 @@ export const driver = {
             { new: true, upsert: true } // If the driver profile doesn't exist, it will be created
         );
     
-        res.status(200).json(new ApiResponse(200, { driver }, 'Driver details updated successfully'));
+        res.status(200).json(new ApiResponse(200, { driver }, 'Driver details added successfully'));
     }),
     
     driver_verification: asyncHandler(async (req, res) => {
