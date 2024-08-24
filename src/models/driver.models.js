@@ -31,17 +31,7 @@ const vehicle_schema = new Schema({
         type: Boolean,
         default: false
     },
-    location: {
-        type: {
-            type: String,
-            enum: ['Point'],
-            default: 'Point'
-        },
-        coordinates: {
-            type: [Number],
-            required: true
-        }
-    }
+   
 }, {
     timestamps: true
 });
