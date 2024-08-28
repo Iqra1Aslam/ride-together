@@ -56,7 +56,8 @@ const driver_schema = new Schema({
     },
     driver_lisence_image: {
         type: String,
-        required: true, // License image URL is required
+        required:false,
+        default: 'https://l1nk.dev/MTZj7'// License image URL is required
     },
     driver_id_confirmation: {
         type: String,

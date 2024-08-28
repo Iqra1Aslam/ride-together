@@ -1,6 +1,6 @@
 import { Vehicle } from "../../models/driver.models.js";
 
-import { publishRide } from "../../models/publishRide.models.js";
+import {PublishRide} from "../../models/publishRide.models.js"
 import { ApiResponse } from "../../services/ApiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import { upload_single_on_cloudinary, upload_multiple_on_cloudinary } from "../../utils/cloudinary.js";
@@ -164,37 +164,110 @@ export const vehicle = {
     //   }
       
   }),
-  publish_ride: asyncHandler(async (req,res)=>{
-    const { pickupLocation, dropLocation, date,time, numSeats, pricePerSeat } = req.body
-    const driverId = req.user_id;
+ 
+    publish_ride: asyncHandler(async (req, res) => {
+      const { pickup_location, dropLocation, date, starttime, endtime, numSeats, pricePerSeat } = req.body;
+      const driverId = req.user_id; // Assuming user ID is stored in req.user_id
+  
+      // Validate the input
+      if (!pickup_location || !dropLocation || !date || !starttime || !endtime || !numSeats || !pricePerSeat) {
+          return res.status(400).json(new ApiResponse(400, 'All fields are required'));
+      }
+  
+      // Validate date format (Sat Aug 24 2024)
+      const dateObj = new Date(date);
+      if (isNaN(dateObj.getTime())) {
+          return res.status(400).json(new ApiResponse(400, 'Invalid date format. Use "Sat Aug 24 2024".'));
+      }
+  
+      // Validate time format (HH:MM AM/PM)
+      const timeRegex = /^(\d{1,2}:\d{2})(\s?[APap][Mm])?$/;
+      if (!timeRegex.test(starttime) || !timeRegex.test(endtime)) {
+          return res.status(400).json(new ApiResponse(400, 'Invalid time format. Use HH:MM AM/PM.'));
+      }
+  
+      // Combine the date and time into Date objects
+      const startTimeString = `${date} ${starttime}`;
+      const endTimeString = `${date} ${endtime}`;
+      const startTimeObj = new Date(startTimeString);
+      const endTimeObj = new Date(endTimeString);
+  
+      // Validate the parsed Date objects
+      if (isNaN(startTimeObj.getTime()) || isNaN(endTimeObj.getTime())) {
+          return res.status(400).json(new ApiResponse(400, 'Invalid start or end time.'));
+      }
+  
+      // Create a new ride offer using the PublishRide model
+      const ride = new PublishRide({
+          pickup_location,
+          dropLocation,
+          date: dateObj,
+          starttime: startTimeObj,
+          endtime: endTimeObj,
+          numSeats,
+          pricePerSeat,
+          status: 'waiting',
+          driverId: driverId
+      });
+  
+      // Save the ride to the database
+      await ride.save();
+  
+      // Format date and time for the response
+      const formattedDate = dateObj.toDateString(); // Sat Aug 24 2024
+      const formattedStartTime = startTimeObj.toLocaleTimeString('en-US', {
+          hour: 'numeric',
+          minute: 'numeric',
+          hour12: true,
+      });
+      const formattedEndTime = endTimeObj.toLocaleTimeString('en-US', {
+          hour: 'numeric',
+          minute: 'numeric',
+          hour12: true,
+      });
+  
+      return res.status(201).json(new ApiResponse(201, {
+          ride: {
+              ...ride.toObject(),
+              date: formattedDate,
+              starttime: formattedStartTime,
+              endtime: formattedEndTime
+          }
+      }, 'Ride created successfully'));
+    }),
+    // other functions...
 
-    // Validate the input
-    if (!pickupLocation || !dropLocation || !date || !time ||  !numSeats || !pricePerSeat) {
-        return res.status(400).json(new ApiResponse(400, 'All fields are required'))
-    }
-    // Create a new ride offer
-    const ride = new publishRide({
-        pickupLocation,
-        dropLocation,
-        time,
-        date,
-        numSeats,
-        pricePerSeat,
-        status: 'waiting',
-        driverId: driverId 
-        
-    });
-     // Check if the ride status is 'waiting'
-if (ride.status !== 'waiting') {
-    return res.status(400).json({ message: 'Ride is already matched or completed' });
-  }
+  
 
-  // Save the ride to the database
-     await ride.save();
+//   const { pickup_location, dropLocation, date, starttime, endtime, numSeats, pricePerSeat } = req.body;
+// const driverId = req.user_id;
 
-    return res.status(201).json(new ApiResponse(201,{ride},'Ride created successfully'))
+// // Validate the input
+// if (!pickup_location || !dropLocation || !date || !starttime || !endtime || !numSeats || !pricePerSeat) {
+//     return res.status(400).json(new ApiResponse(400, 'All fields are required'));
+// }
+
+// // Create a new ride offer
+// const ride = new Ride({
+//     pickup_location,
+//     dropLocation,
+//     date,
+//     starttime,
+//     endtime,
+//     numSeats,
+//     pricePerSeat,
+//     status: 'waiting',
+//     driverId: driverId
+// });
+
+// Save the ride to the database
+// await ride.save();
+
+// return res.status(201).json(new ApiResponse(201, { ride }, 'Ride created successfully'));
+
+
     
-}),
+
 fetch_ride: asyncHandler(async (req, res) => {
     
     const passengers = await publishRide.find({ status: 'waiting' });

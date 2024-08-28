@@ -4,27 +4,26 @@ import { asyncHandler } from "../../utils/asyncHandler.js";
 import { upload_single_on_cloudinary } from "../../utils/cloudinary.js";
 
 export const driver = {
-    driver_details_add: asyncHandler(async (req, res) => {
-        const user_id = req.user_id; // This should be retrieved from the authenticated user's session
+   driver_details_add: asyncHandler(async (req, res) => {
+        let user_id = req.params.id // This should be retrieved from the authenticated user's session
+        if (typeof user_id === 'string') {
+            user_id = user_id.trim().replace(/^:/, ''); // Remove leading colons and trim spaces
+        }
+        console.log("user_id",user_id)
         const { name, phone, cnic } = req.body;
         const image = req.file;
-    
-        let profile_image_url = null;
-    
-        if (image) {
-            // Ensure you're passing the correct path as a string
+        const profile_image_url = await upload_single_on_cloudinary(image);
             try {
-                const profile_image = await upload_single_on_cloudinary(image.path);
-                profile_image_url = profile_image?.url;
+                
                 console.log("Uploaded image URL:", profile_image_url); // Log for debugging
             } catch (error) {
                 console.error("Error uploading image:", error);
                 return res.status(500).json({ success: false, message: "Failed to upload image" });
             }
-        }
+        
     
-        const driver = await Driver.findOneAndUpdate(
-            { driver: user_id },
+        const driver = await Driver.findByIdAndUpdate(
+            user_id ,
             { 
                 driver_lisence_image: profile_image_url,
                 name: name,
@@ -36,7 +35,6 @@ export const driver = {
     
         res.status(200).json(new ApiResponse(200, { driver }, 'Driver details added successfully'));
     }),
-    
     driver_verification: asyncHandler(async (req, res) => {
         const { is_verified } = req.body;
         const user_id = req.user_id;
@@ -76,10 +74,4 @@ export const driver = {
     }
 }),
 
-
-
-
-
-
-
-    }
+}
