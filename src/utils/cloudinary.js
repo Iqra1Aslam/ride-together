@@ -7,19 +7,16 @@ cloudinary.config({
 })
 
 export const upload_single_on_cloudinary = async (file) => {
-    try {
-        const file_data = await cloudinary.uploader.upload(file)
-            .then(info => {
-                console.log(info.url)
-                return info.url
-            })
-            .catch(error => {
-                console.log(error.message)
-                return error.message
-            })
+    
 
+    try {
+       
+        const file_data = await cloudinary.uploader.upload(file.path);
+        console.log('Uploaded Image Data:', file_data);
+        return file_data.url;
     } catch (error) {
-        console.log(error.message)
+        console.error('Error uploading to Cloudinary:', error);
+        throw new Error('Failed to upload image');
     }
 }
 

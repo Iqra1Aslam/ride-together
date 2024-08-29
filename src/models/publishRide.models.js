@@ -3,40 +3,48 @@ import { Schema, model } from 'mongoose';
 const publishRideSchema = new Schema({
   passengerId: {
     type: Schema.Types.ObjectId,
-    ref: 'User'
+    ref: 'User',
+    required: false
   },
   driverId: {
     type: Schema.Types.ObjectId,
-    ref: 'User'
-  },
-
-  pickup_location: {
-    type: { type: String, default: 'Point' },
-    coordinates: [Number], // [longitude, latitude]
-  },
-  dropLocation: {
-    type: { type: String, default: 'Point' },
-    coordinates: [Number],
-  },
-  time: {
-    type: Date,
+    ref: 'User',
     required: true
   },
- 
-  numSeats: {
-    type: Number,
-    required: true,
+  pickup_location: {
+    type: {
+      type: String,
+      enum: ['Point'],
+      required: true
+    },
+    coordinates: {
+      type: [Number],
+      required: true
+    }
   },
-  pricePerSeat: {
-    type: Number,
-    required: true,
+  dropLocation: {
+    type: {
+      type: String,
+      enum: ['Point'],
+      required: true
+    },
+    coordinates: {
+      type: [Number],
+      required: true
+    }
   },
+  date: { type: Date, required: true },
+  starttime: { type: Date, required: true },
+  endtime: { type: Date, required: true },
+  numSeats: { type: Number, required: true },
+  pricePerSeat: { type: Number, required: true },
   status: {
     type: String,
     enum: ['waiting', 'matched', 'completed'],
     default: 'waiting'
-  } // waiting, matched, completed
+  }
 });
 
 publishRideSchema.index({ pickup_location: '2dsphere' });
-export const publishRide = model('Ride', publishRideSchema);
+
+export const PublishRide = model('PublishRide', publishRideSchema);
