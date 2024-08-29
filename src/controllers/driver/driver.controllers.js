@@ -30,8 +30,10 @@ export const driver = {
         const image = req.file;
         const profile_image_url = await upload_single_on_cloudinary(image);
     
-        try {
+     
           
+        try {
+           
     
             const driver = await Driver.findByIdAndUpdate(
                 user_id,
