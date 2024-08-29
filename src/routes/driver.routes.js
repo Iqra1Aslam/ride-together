@@ -10,8 +10,14 @@ export const driverRouter = Router();
 
 
 driverRouter.route('/driver-verification').patch(auth_middleware.check_user_role(['driver','admin']), driver. driver_verification)
+
 driverRouter.post('/driver-details:id', 
-    auth_middleware.check_user_role(['driver', 'admin', 'passenger']), // Ensure only drivers or admins can access this route
-    upload.single('lisence_image'), // Upload the license image
-    driver.driver_details_add // Call the controller function
+    auth_middleware.check_user_role(['driver', 'admin', 'passenger']), 
+    driver.driver_details_add 
+);
+
+driverRouter.post('/upload-license-image/:id',
+    auth_middleware.check_user_role(['driver', 'admin']),
+    upload.single('lisence_image'),  // 'lisence_image' should match the form data key in your request
+    driver.upload_driver_license_image
 );

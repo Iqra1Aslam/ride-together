@@ -4,37 +4,45 @@ import { asyncHandler } from "../../utils/asyncHandler.js";
 import { upload_single_on_cloudinary } from "../../utils/cloudinary.js";
 
 export const driver = {
-   driver_details_add: asyncHandler(async (req, res) => {
-        let user_id = req.params.id // This should be retrieved from the authenticated user's session
-        if (typeof user_id === 'string') {
-            user_id = user_id.trim().replace(/^:/, ''); // Remove leading colons and trim spaces
-        }
-        console.log("user_id",user_id)
+    driver_details_add: asyncHandler(async (req, res) => {
+        const user_id = req.params.id.trim();
         const { name, phone, cnic } = req.body;
-        const image = req.file;
-        const profile_image_url = await upload_single_on_cloudinary(image);
-            try {
-                
-                console.log("Uploaded image URL:", profile_image_url); // Log for debugging
-            } catch (error) {
-                console.error("Error uploading image:", error);
-                return res.status(500).json({ success: false, message: "Failed to upload image" });
-            }
-        
     
-        const driver = await Driver.findByIdAndUpdate(
-            user_id ,
-            { 
-                driver_lisence_image: profile_image_url,
-                name: name,
-                phone: phone,
-                cnic: cnic 
-            },
-            { new: true, upsert: true } // If the driver profile doesn't exist, it will be created
-        );
+        try {
+            const driver = await Driver.findByIdAndUpdate(
+                user_id,
+                { 
+                    name: name,
+                    phone: phone,
+                    cnic: cnic 
+                },
+                { new: true, upsert: true }
+            );
     
-        res.status(200).json(new ApiResponse(200, { driver }, 'Driver details added successfully'));
+            res.status(200).json(new ApiResponse(200, { driver }, 'Driver details added successfully'));
+        } catch (error) {
+            res.status(500).json({ success: false, message: "Failed to add driver details" });
+        }
     }),
+    upload_driver_license_image: asyncHandler(async (req, res) => {
+        const user_id = req.params.id.trim();
+        const image = req.file;
+    
+        try {
+            const profile_image_url = await upload_single_on_cloudinary(image);
+    
+            const driver = await Driver.findByIdAndUpdate(
+                user_id,
+                { driver_lisence_image: profile_image_url },
+                { new: true }
+            );
+    
+            res.status(200).json(new ApiResponse(200, { driver }, 'Driver license image uploaded successfully'));
+        } catch (error) {
+            res.status(500).json({ success: false, message: "Failed to upload driver license image" });
+        }
+    }),
+        
     driver_verification: asyncHandler(async (req, res) => {
         const { is_verified } = req.body;
         const user_id = req.user_id;
