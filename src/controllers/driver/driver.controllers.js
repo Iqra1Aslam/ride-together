@@ -28,6 +28,7 @@ export const driver = {
     upload_driver_license_image: asyncHandler(async (req, res) => {
         const user_id = req.params.id.trim();
         const image = req.file;
+        const profile_image_url = await upload_single_on_cloudinary(image);
     
         try {
             const profile_image_url = await upload_single_on_cloudinary(image);
