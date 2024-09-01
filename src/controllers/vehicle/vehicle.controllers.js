@@ -74,96 +74,92 @@ export const vehicle = {
         res.status(200).json(new ApiResponse(200, { vehicle }, 'Vehicle verification status updated successfully'));
     }),
     is_nearestVehicle: asyncHandler(async (req, res) => {
-      try {
-          const { passengerCoordinates } = req.body;
-          const nearestVehicles = [];
-  
-          for (const coordinates of passengerCoordinates) {
-              const locations = await Vehicle.aggregate([
-                  {
-                      $geoNear: {
-                          near: {
-                              type: "Point",
-                              coordinates: [parseFloat(coordinates.latitude), parseFloat(coordinates.longitude)]
-                          },
-                          distanceField: "distance",
-                          maxDistance: 5000, // 5km radius
-                          spherical: true,
-                          key: "location"
-                      }
-                  },
-                  {
-                      $project: {
-                          vehicle_model: 1,
-                          driver_name: 1,
-                          seats_available: 1,
-                          price_per_person: 1,
-                          distance: 1
-                      }
-                  }
-              ]);
-              nearestVehicles.push(locations);
-          }
-  
-          const allEmpty = nearestVehicles.every(array => array.length === 0);
-  
-          if (allEmpty) {
-              return res.status(404).json({ message: 'No vehicles found nearby' });
-          }
-          res.json(nearestVehicles);
-      } catch (err) {
-          console.error('Error finding nearest vehicles:', err);
-          res.status(500).json({ error: 'Error finding nearest vehicles' });
-      }
-    //   updated code 
-    //   try {
-    //     const { passengerLocation, requestedTime } = req.body;
+   
     
-    //     // Convert requestedTime to a Date object
-    //     const requestedDate = new Date(requestedTime);
+        try {
+            const { passengerLocation, requestedTime } = req.body;
     
-    //     // Calculate the time range: 15 minutes before and after the requested time
-    //     const timeBefore = new Date(requestedDate);
-    //     timeBefore.setMinutes(requestedDate.getMinutes() - 15);
+            // Validate input
+            if (!passengerLocation || !requestedTime) {
+                return res.status(400).json({ message: 'Passenger location and requested time are required.' });
+            }
     
-    //     const timeAfter = new Date(requestedDate);
-    //     timeAfter.setMinutes(requestedDate.getMinutes() + 15);
+            // Get the current date
+            const currentDate = new Date();
     
-    //     // Find nearby rides within 5km and within the specified time range
-    //     const nearbyRides = await Ride.aggregate([
-    //       {
-    //         $geoNear: {
-    //           near: {
-    //             type: 'Point',
-    //             coordinates: [parseFloat(passengerLocation.longitude), parseFloat(passengerLocation.latitude)],
-    //           },
-    //           distanceField: 'distance',
-    //           maxDistance: 5000, // 5km radius
-    //           spherical: true,
-    //           key: 'pickup_location', // Geospatial index field
-    //         },
-    //       },
-    //       {
-    //         $match: {
-    //           pickup_time: {
-    //             $gte: timeBefore,
-    //             $lte: timeAfter,
-    //           },
-    //         },
-    //       },
-    //     ]);
+            // Extract the date part from currentDate
+            const dateString = currentDate.toDateString(); // e.g., "Sat Aug 24 2024"
     
-    //     if (nearbyRides.length === 0) {
-    //       return res.status(404).json({ message: 'No rides found nearby' });
-    //     }
+            // Combine the current date with the requested time
+            const requestedDateString = `${dateString} ${requestedTime}`;
+            const requestedDate = new Date(requestedDateString);
     
-    //     res.json(nearbyRides);
-    //   } catch (err) {
-    //     console.error('Error finding nearby rides:', err);
-    //     res.status(500).json({ error: 'Failed to find nearby rides' });
-    //   }
-      
-  }),
+            // Calculate the time range: 15 minutes before and after the requested time
+            const timeBefore = new Date(requestedDate);
+            timeBefore.setMinutes(requestedDate.getMinutes() - 15);
+    
+            const timeAfter = new Date(requestedDate);
+            timeAfter.setMinutes(requestedDate.getMinutes() + 15);
+    
+            // Format timeBefore and timeAfter to "HH:MM AM/PM"
+            const formattedTimeBefore = timeBefore.toLocaleTimeString('en-US', {
+                hour: 'numeric',
+                minute: 'numeric',
+                hour12: true,
+            });
+    
+            const formattedTimeAfter = timeAfter.toLocaleTimeString('en-US', {
+                hour: 'numeric',
+                minute: 'numeric',
+                hour12: true,
+            });
+    
+            // Debug logs
+            console.log('Passenger Location:', passengerLocation);
+            console.log('Requested Time:', requestedTime);
+            console.log('Time Before:', formattedTimeBefore);
+            console.log('Time After:', formattedTimeAfter);
+    
+            // Find nearby rides within 5km and within the specified time range
+            const nearbyRides = await PublishRide.aggregate([
+                {
+                    $geoNear: {
+                        near: {
+                            type: 'Point',
+                            coordinates: [parseFloat(passengerLocation.longitude), parseFloat(passengerLocation.latitude)],
+                        },
+                        distanceField: 'distance',
+                        maxDistance: 5000, // 5km radius
+                        spherical: true,
+                        key: 'pickup_location', // Geospatial index field
+                    },
+                },
+                {
+                    $match: {
+                        starttime: {
+                            $gte: timeBefore,
+                            $lte: timeAfter,
+                        },
+                    },
+                },
+            ]);
+    
+            console.log('Nearby Rides:', nearbyRides);
+    
+            if (nearbyRides.length === 0) {
+                return res.status(404).json({ message: 'No rides found nearby' });
+            }
+    
+            res.json(nearbyRides);
+        } catch (err) {
+            console.error('Error finding nearby rides:', err);
+            res.status(500).json({ error: 'Failed to find nearby rides' });
+        }
+    }),
+    
+
+    
+    
  
     publish_ride: asyncHandler(async (req, res) => {
       const { pickup_location, dropLocation, date, starttime, endtime, numSeats, pricePerSeat } = req.body;
@@ -249,21 +245,6 @@ export const vehicle = {
 
 // // Create a new ride offer
 // const ride = new Ride({
-//     pickup_location,
-//     dropLocation,
-//     date,
-//     starttime,
-//     endtime,
-//     numSeats,
-//     pricePerSeat,
-//     status: 'waiting',
-//     driverId: driverId
-// });
-
-// Save the ride to the database
-// await ride.save();
-
-// return res.status(201).json(new ApiResponse(201, { ride }, 'Ride created successfully'));
 
 
     
