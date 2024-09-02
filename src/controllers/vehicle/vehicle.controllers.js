@@ -74,8 +74,6 @@ export const vehicle = {
         res.status(200).json(new ApiResponse(200, { vehicle }, 'Vehicle verification status updated successfully'));
     }),
     is_nearestVehicle: asyncHandler(async (req, res) => {
-   
-    
         try {
             const { passengerLocation, requestedTime } = req.body;
     
@@ -84,54 +82,34 @@ export const vehicle = {
                 return res.status(400).json({ message: 'Passenger location and requested time are required.' });
             }
     
-            // Get the current date
+            // Get the current date and construct the requested date with the time
             const currentDate = new Date();
-    
-            // Extract the date part from currentDate
             const dateString = currentDate.toDateString(); // e.g., "Sat Aug 24 2024"
-    
-            // Combine the current date with the requested time
             const requestedDateString = `${dateString} ${requestedTime}`;
             const requestedDate = new Date(requestedDateString);
     
-            // Calculate the time range: 15 minutes before and after the requested time
+            // Define the time range: 15 minutes before and after the requested time
             const timeBefore = new Date(requestedDate);
             timeBefore.setMinutes(requestedDate.getMinutes() - 15);
     
             const timeAfter = new Date(requestedDate);
             timeAfter.setMinutes(requestedDate.getMinutes() + 15);
     
-            // Format timeBefore and timeAfter to "HH:MM AM/PM"
-            const formattedTimeBefore = timeBefore.toLocaleTimeString('en-US', {
-                hour: 'numeric',
-                minute: 'numeric',
-                hour12: true,
-            });
-    
-            const formattedTimeAfter = timeAfter.toLocaleTimeString('en-US', {
-                hour: 'numeric',
-                minute: 'numeric',
-                hour12: true,
-            });
-    
-            // Debug logs
+            // Debugging information
             console.log('Passenger Location:', passengerLocation);
             console.log('Requested Time:', requestedTime);
-            console.log('Time Before:', formattedTimeBefore);
-            console.log('Time After:', formattedTimeAfter);
+            console.log('Time Before:', timeBefore.toISOString());
+            console.log('Time After:', timeAfter.toISOString());
     
-            // Find nearby rides within 5km and within the specified time range
+            // Use $geoNear to find nearby rides within 5km and the specified time range
             const nearbyRides = await PublishRide.aggregate([
                 {
                     $geoNear: {
-                        near: {
-                            type: 'Point',
-                            coordinates: [parseFloat(passengerLocation.longitude), parseFloat(passengerLocation.latitude)],
-                        },
-                        distanceField: 'distance',
-                        maxDistance: 5000, // 5km radius
-                        spherical: true,
-                        key: 'pickup_location', // Geospatial index field
+                        near: passengerLocation, // The passenger's location as a GeoJSON point
+                        distanceField: 'distance', // The field in the results that contains the calculated distance
+                        maxDistance: 5000, // Distance in meters (5km)
+                        spherical: true, // Enable spherical calculations for geospatial data
+                        key: 'pickup_location', // The field in the collection that stores location data
                     },
                 },
                 {
@@ -140,12 +118,15 @@ export const vehicle = {
                             $gte: timeBefore,
                             $lte: timeAfter,
                         },
+                        status: "waiting", // Match only rides with the status "waiting"
                     },
                 },
             ]);
     
+            // Log nearby rides found
             console.log('Nearby Rides:', nearbyRides);
     
+            // Respond with nearby rides or an error if none found
             if (nearbyRides.length === 0) {
                 return res.status(404).json({ message: 'No rides found nearby' });
             }
@@ -155,7 +136,8 @@ export const vehicle = {
             console.error('Error finding nearby rides:', err);
             res.status(500).json({ error: 'Failed to find nearby rides' });
         }
-    }),
+      }),
+      
     
 
     
