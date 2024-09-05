@@ -11,6 +11,11 @@ const publishRideSchema = new Schema({
     ref: 'User',
     required: true
   },
+  vehicleId: { // Add this reference
+    type: Schema.Types.ObjectId,
+    ref: 'Vehicle',
+    required: true
+  },
   pickup_location: {
     type: {
       type: String,

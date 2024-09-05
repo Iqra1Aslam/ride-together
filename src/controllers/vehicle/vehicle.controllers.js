@@ -73,132 +73,192 @@ export const vehicle = {
 
         res.status(200).json(new ApiResponse(200, { vehicle }, 'Vehicle verification status updated successfully'));
     }),
-    is_nearestVehicle: asyncHandler(async (req, res) => {
-      try {
-          const { passengerCoordinates } = req.body;
-          const nearestVehicles = [];
-  
-          for (const coordinates of passengerCoordinates) {
-              const locations = await Vehicle.aggregate([
-                  {
-                      $geoNear: {
-                          near: {
-                              type: "Point",
-                              coordinates: [parseFloat(coordinates.latitude), parseFloat(coordinates.longitude)]
-                          },
-                          distanceField: "distance",
-                          maxDistance: 5000, // 5km radius
-                          spherical: true,
-                          key: "location"
-                      }
-                  },
-                  {
-                      $project: {
-                          vehicle_model: 1,
-                          driver_name: 1,
-                          seats_available: 1,
-                          price_per_person: 1,
-                          distance: 1
-                      }
-                  }
-              ]);
-              nearestVehicles.push(locations);
-          }
-  
-          const allEmpty = nearestVehicles.every(array => array.length === 0);
-  
-          if (allEmpty) {
-              return res.status(404).json({ message: 'No vehicles found nearby' });
-          }
-          res.json(nearestVehicles);
-      } catch (err) {
-          console.error('Error finding nearest vehicles:', err);
-          res.status(500).json({ error: 'Error finding nearest vehicles' });
-      }
-    //   updated code 
-    //   try {
-    //     const { passengerLocation, requestedTime } = req.body;
+
+    //     try {
+    //         const { passengerLocation, requestedTime } = req.body;
     
-    //     // Convert requestedTime to a Date object
-    //     const requestedDate = new Date(requestedTime);
+    //         // Validate input
+    //         if (!passengerLocation || !requestedTime) {
+    //             return res.status(400).json({ message: 'Passenger location and requested time are required.' });
+    //         }
     
-    //     // Calculate the time range: 15 minutes before and after the requested time
-    //     const timeBefore = new Date(requestedDate);
-    //     timeBefore.setMinutes(requestedDate.getMinutes() - 15);
+    //         // Get the current date and construct the requested date with the time
+    //         const currentDate = new Date();
+    //         const dateString = currentDate.toDateString(); // e.g., "Sat Aug 24 2024"
+    //         const requestedDateString = `${dateString} ${requestedTime}`;
+    //         const requestedDate = new Date(requestedDateString);
     
-    //     const timeAfter = new Date(requestedDate);
-    //     timeAfter.setMinutes(requestedDate.getMinutes() + 15);
+    //         // Define the time range: 15 minutes before and after the requested time
+    //         const timeBefore = new Date(requestedDate);
+    //         timeBefore.setMinutes(requestedDate.getMinutes() - 15);
     
-    //     // Find nearby rides within 5km and within the specified time range
-    //     const nearbyRides = await Ride.aggregate([
-    //       {
-    //         $geoNear: {
-    //           near: {
-    //             type: 'Point',
-    //             coordinates: [parseFloat(passengerLocation.longitude), parseFloat(passengerLocation.latitude)],
-    //           },
-    //           distanceField: 'distance',
-    //           maxDistance: 5000, // 5km radius
-    //           spherical: true,
-    //           key: 'pickup_location', // Geospatial index field
-    //         },
-    //       },
-    //       {
-    //         $match: {
-    //           pickup_time: {
-    //             $gte: timeBefore,
-    //             $lte: timeAfter,
-    //           },
-    //         },
-    //       },
-    //     ]);
+    //         const timeAfter = new Date(requestedDate);
+    //         timeAfter.setMinutes(requestedDate.getMinutes() + 15);
     
-    //     if (nearbyRides.length === 0) {
-    //       return res.status(404).json({ message: 'No rides found nearby' });
+    //         // Debugging information
+    //         console.log('Passenger Location:', passengerLocation);
+    //         console.log('Requested Time:', requestedTime);
+    //         console.log('Time Before:', timeBefore.toISOString());
+    //         console.log('Time After:', timeAfter.toISOString());
+    
+    //         // Use $geoNear to find nearby rides within 5km and the specified time range
+    //         const nearbyRides = await PublishRide.aggregate([
+    //             {
+    //                 $geoNear: {
+    //                     near: passengerLocation, // The passenger's location as a GeoJSON point
+    //                     distanceField: 'distance', // The field in the results that contains the calculated distance
+    //                     maxDistance: 5000, // Distance in meters (5km)
+    //                     spherical: true, // Enable spherical calculations for geospatial data
+    //                     key: 'pickup_location', // The field in the collection that stores location data
+    //                 },
+    //             },
+    //             {
+    //                 $match: {
+    //                     starttime: {
+    //                         $gte: timeBefore,
+    //                         $lte: timeAfter,
+    //                     },
+    //                     status: "waiting", // Match only rides with the status "waiting"
+    //                 },
+    //             },
+    //             {
+    //                 $project: {
+    //                     _id: 0,
+    //                     vehicle_model: 1,
+    //                     driver_name: 1,
+    //                     seats_available: 1,
+    //                     price_per_person: 1,
+    //                     distance: 1,
+    //                 },
+    //             },
+    //         ]);
+    
+    //         // Log nearby rides found
+    //         console.log('Nearby Rides:', nearbyRides);
+    
+    //         // Respond with nearby rides or an error if none found
+    //         if (nearbyRides.length === 0) {
+    //             return res.status(404).json({ message: 'No rides found nearby' });
+    //         }
+    
+    //         res.json(nearbyRides);
+    //     } catch (err) {
+    //         console.error('Error finding nearby rides:', err);
+    //         res.status(500).json({ error: 'Failed to find nearby rides' });
     //     }
+    // }),
     
-    //     res.json(nearbyRides);
-    //   } catch (err) {
-    //     console.error('Error finding nearby rides:', err);
-    //     res.status(500).json({ error: 'Failed to find nearby rides' });
-    //   }
       
-  }),
+    is_nearestVehicle: asyncHandler(async (req, res) => {
+        try {
+            const { passengerLocation, requestedTime } = req.body;
+    
+            // Validate input
+            if (!passengerLocation || !requestedTime) {
+                return res.status(400).json({ message: 'Passenger location and requested time are required.' });
+            }
+    
+            // Get the current date and construct the requested date with the time
+            const currentDate = new Date();
+            const dateString = currentDate.toDateString(); // e.g., "Sat Aug 24 2024"
+            const requestedDateString =`${dateString} ${requestedTime}`;
+            const requestedDate = new Date(requestedDateString);
+    
+            // Define the time range: 15 minutes before and after the requested time
+            const timeBefore = new Date(requestedDate);
+            timeBefore.setMinutes(requestedDate.getMinutes() - 15);
+    
+            const timeAfter = new Date(requestedDate);
+            timeAfter.setMinutes(requestedDate.getMinutes() + 15);
+    
+            // Debugging information
+            console.log('Passenger Location:', passengerLocation);
+            console.log('Requested Time:', requestedTime);
+            console.log('Time Before:', timeBefore.toISOString());
+            console.log('Time After:', timeAfter.toISOString());
+    
+            // Use $geoNear to find nearby rides within 5km and the specified time range
+            const nearbyRides = await PublishRide.aggregate([
+                {
+                    $geoNear: {
+                        near: passengerLocation, // The passenger's location as a GeoJSON point
+                        distanceField: 'distance', // The field in the results that contains the calculated distance
+                        maxDistance: 5000, // Distance in meters (5km)
+                        spherical: true, // Enable spherical calculations for geospatial data
+                        key: 'pickup_location', // The field in the collection that stores location data
+                    },
+                },
+                {
+                    $match: {
+                        starttime: {
+                            $gte: timeBefore,
+                            $lte: timeAfter,
+                        },
+                        status: "waiting", // Match only rides with the status "waiting"
+                    },
+                },
+            ]);
+    
+            // Log nearby rides found
+            console.log('Nearby Rides:', nearbyRides);
+    
+            // Respond with nearby rides or an error if none found
+            if (nearbyRides.length === 0) {
+                return res.status(404).json({ message: 'No rides found nearby' });
+            }
+    
+            res.json(nearbyRides);
+        } catch (err) {
+            console.error('Error finding nearby rides:', err);
+            res.status(500).json({ error: 'Failed to find nearby rides' });
+        }
+      }),
+    
+    
+
+    
+    
  
-    publish_ride: asyncHandler(async (req, res) => {
-      const { pickup_location, dropLocation, date, starttime, endtime, numSeats, pricePerSeat } = req.body;
-      const driverId = req.user_id; // Assuming user ID is stored in req.user_id
-  
-      // Validate the input
-      if (!pickup_location || !dropLocation || !date || !starttime || !endtime || !numSeats || !pricePerSeat) {
+      publish_ride: asyncHandler(async (req, res) => {
+        const { pickup_location, dropLocation, date, starttime, endtime, numSeats, pricePerSeat } = req.body;
+        const driverId = req.user_id; // Assuming user ID is stored in req.user_id
+      
+        // Validate the input
+        if (!pickup_location || !dropLocation || !date || !starttime || !endtime || !numSeats || !pricePerSeat) {
           return res.status(400).json(new ApiResponse(400, 'All fields are required'));
-      }
-  
-      // Validate date format (Sat Aug 24 2024)
-      const dateObj = new Date(date);
-      if (isNaN(dateObj.getTime())) {
+        }
+      
+        // Validate date format (Sat Aug 24 2024)
+        const dateObj = new Date(date);
+        if (isNaN(dateObj.getTime())) {
           return res.status(400).json(new ApiResponse(400, 'Invalid date format. Use "Sat Aug 24 2024".'));
-      }
-  
-      // Validate time format (HH:MM AM/PM)
-      const timeRegex = /^(\d{1,2}:\d{2})(\s?[APap][Mm])?$/;
-      if (!timeRegex.test(starttime) || !timeRegex.test(endtime)) {
+        }
+      
+        // Validate time format (HH:MM AM/PM)
+        const timeRegex = /^(\d{1,2}:\d{2})(\s?[APap][Mm])?$/;
+        if (!timeRegex.test(starttime) || !timeRegex.test(endtime)) {
           return res.status(400).json(new ApiResponse(400, 'Invalid time format. Use HH:MM AM/PM.'));
-      }
-  
-      // Combine the date and time into Date objects
-      const startTimeString = `${date} ${starttime}`;
-      const endTimeString = `${date} ${endtime}`;
-      const startTimeObj = new Date(startTimeString);
-      const endTimeObj = new Date(endTimeString);
-  
-      // Validate the parsed Date objects
-      if (isNaN(startTimeObj.getTime()) || isNaN(endTimeObj.getTime())) {
+        }
+      
+        // Combine the date and time into Date objects
+        const startTimeString = `${date} ${starttime}`;
+        const endTimeString = `${date} ${endtime}`;
+        const startTimeObj = new Date(startTimeString);
+        const endTimeObj = new Date(endTimeString);
+      
+        // Validate the parsed Date objects
+        if (isNaN(startTimeObj.getTime()) || isNaN(endTimeObj.getTime())) {
           return res.status(400).json(new ApiResponse(400, 'Invalid start or end time.'));
-      }
-  
-      // Create a new ride offer using the PublishRide model
-      const ride = new PublishRide({
+        }
+      
+        // Fetch the vehicle associated with the driver
+        const vehicle = await Vehicle.findOne({ driver: driverId });
+        if (!vehicle) {
+          return res.status(404).json(new ApiResponse(404, 'No vehicle found for this driver.'));
+        }
+      
+        // Create a new ride offer using the PublishRide model
+        const ride = new PublishRide({
           pickup_location,
           dropLocation,
           date: dateObj,
@@ -207,34 +267,36 @@ export const vehicle = {
           numSeats,
           pricePerSeat,
           status: 'waiting',
-          driverId: driverId
-      });
-  
-      // Save the ride to the database
-      await ride.save();
-  
-      // Format date and time for the response
-      const formattedDate = dateObj.toDateString(); // Sat Aug 24 2024
-      const formattedStartTime = startTimeObj.toLocaleTimeString('en-US', {
+          driverId: driverId,
+          vehicleId: vehicle._id, // Link the vehicle's ID
+        });
+      
+        // Save the ride to the database
+        await ride.save();
+      
+        // Format date and time for the response
+        const formattedDate = dateObj.toDateString(); // Sat Aug 24 2024
+        const formattedStartTime = startTimeObj.toLocaleTimeString('en-US', {
           hour: 'numeric',
           minute: 'numeric',
           hour12: true,
-      });
-      const formattedEndTime = endTimeObj.toLocaleTimeString('en-US', {
+        });
+        const formattedEndTime = endTimeObj.toLocaleTimeString('en-US', {
           hour: 'numeric',
           minute: 'numeric',
           hour12: true,
-      });
-  
-      return res.status(201).json(new ApiResponse(201, {
+        });
+      
+        return res.status(201).json(new ApiResponse(201, {
           ride: {
-              ...ride.toObject(),
-              date: formattedDate,
-              starttime: formattedStartTime,
-              endtime: formattedEndTime
-          }
-      }, 'Ride created successfully'));
-    }),
+            ...ride.toObject(),
+            date: formattedDate,
+            starttime: formattedStartTime,
+            endtime: formattedEndTime,
+          },
+        }, 'Ride created successfully'));
+      }),
+      
     // other functions...
 
   
@@ -249,21 +311,6 @@ export const vehicle = {
 
 // // Create a new ride offer
 // const ride = new Ride({
-//     pickup_location,
-//     dropLocation,
-//     date,
-//     starttime,
-//     endtime,
-//     numSeats,
-//     pricePerSeat,
-//     status: 'waiting',
-//     driverId: driverId
-// });
-
-// Save the ride to the database
-// await ride.save();
-
-// return res.status(201).json(new ApiResponse(201, { ride }, 'Ride created successfully'));
 
 
     
