@@ -17,7 +17,7 @@ driverRouter.post('/driver-details:id',
 );
 
 driverRouter.post('/upload-license-image/:id',
-    auth_middleware.check_user_role(['driver', 'admin']),
-    upload.single('lisence_image'),  // 'lisence_image' should match the form data key in your request
+    auth_middleware.check_user_role(['driver', 'admin', 'passenger']),
+    upload.single('lisence_image'), 
     driver.upload_driver_license_image
 );
