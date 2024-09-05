@@ -48,10 +48,21 @@ const userSchema = new Schema(
             coordinates: {
                 type: [Number],
                 default: [0, 0]
+            },
+            // code added by iqra
+            resetPasswordToken: {
+                type: String
+            },
+            resetPasswordExpires:{
+                type:  Date
+            },
+            newPassword:{
+                type: String
             }
         }
         
     },
+
     {
         timestamps: true
     })
