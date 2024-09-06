@@ -8,7 +8,7 @@ const publishRideSchema = new Schema({
   },
   driverId: {
     type: Schema.Types.ObjectId,
-    ref: 'drivers',
+    ref: 'User',
     required: true
   },
   vehicleId: { // Add this reference
