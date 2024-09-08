@@ -6,16 +6,16 @@ import { upload_single_on_cloudinary } from "../../utils/cloudinary.js";
 export const driver = {
     driver_details_add: asyncHandler(async (req, res) => {
         const user_id = req.user_id;
-        // const user_id = req.params.id.trim();
-        const { name, phone, cnic } = req.body;
+        const { name, phone, cnic, fcmToken } = req.body;
     
         try {
             const driver = await Driver.findByIdAndUpdate(
                 user_id,
-                { 
+                {
                     name: name,
                     phone: phone,
-                    cnic: cnic 
+                    cnic: cnic,
+                    fcmToken: fcmToken, // Save FCM token
                 },
                 { new: true, upsert: true }
             );
@@ -25,6 +25,7 @@ export const driver = {
             res.status(500).json({ success: false, message: "Failed to add driver details" });
         }
     }),
+    
     upload_driver_license_image: asyncHandler(async (req, res) => {
         const user_id = req.user_id;
         const image = req.file;

@@ -11,7 +11,8 @@ export const driverRouter = Router();
 
 driverRouter.route('/driver-verification').patch(auth_middleware.check_user_role(['driver','admin']), driver. driver_verification)
 
-driverRouter.post('/driver-details:id', 
+driverRouter.post
+('/driver-details/:id', 
     auth_middleware.check_user_role(['driver', 'admin', 'passenger']), 
     driver.driver_details_add 
 );
