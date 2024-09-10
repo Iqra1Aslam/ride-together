@@ -1,11 +1,14 @@
-import { Vehicle } from "../../models/driver.models.js";
+import { Driver, Vehicle } from "../../models/driver.models.js";
 
 import {PublishRide} from "../../models/publishRide.models.js"
+import mongoose from 'mongoose';
+
 import { ApiResponse } from "../../services/ApiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import { upload_single_on_cloudinary, upload_multiple_on_cloudinary } from "../../utils/cloudinary.js";
 
 import Joi from 'joi'
+import { User } from "../../models/user.models.js";
 
 export const vehicle = {
   vehicle_details_add: asyncHandler(async (req, res) => {
@@ -113,32 +116,7 @@ export const vehicle = {
     //                 },
     //             },
     //             {
-    //                 $match: {
-    //                     starttime: {
-    //                         $gte: timeBefore,
-    //                         $lte: timeAfter,
-    //                     },
-    //                     status: "waiting", // Match only rides with the status "waiting"
-    //                 },
-    //             },
-    //             {
-    //                 $project: {
-    //                     _id: 0,
-    //                     vehicle_model: 1,
-    //                     driver_name: 1,
-    //                     seats_available: 1,
-    //                     price_per_person: 1,
-    //                     distance: 1,
-    //                 },
-    //             },
-    //         ]);
-    
-    //         // Log nearby rides found
-    //         console.log('Nearby Rides:', nearbyRides);
-    
-    //         // Respond with nearby rides or an error if none found
-    //         if (nearbyRides.length === 0) {
-    //             return res.status(404).json({ message: 'No rides found nearby' });
+    //  
     //         }
     
     //         res.json(nearbyRides);
@@ -345,20 +323,46 @@ export const vehicle = {
         }, 'Ride created successfully'));
       }),
       
-    // other functions...
-
-  
-
-//   const { pickup_location, dropLocation, date, starttime, endtime, numSeats, pricePerSeat } = req.body;
-// const driverId = req.user_id;
-
-// // Validate the input
-// if (!pickup_location || !dropLocation || !date || !starttime || !endtime || !numSeats || !pricePerSeat) {
-//     return res.status(400).json(new ApiResponse(400, 'All fields are required'));
-// }
-
-// // Create a new ride offer
-// const ride = new Ride({
+      send_request: asyncHandler(async (req, res) => {
+        const { driverId, passengerId, pickupLocation, requestedDate, requestedTime } = req.body;
+    
+        // Validate ObjectId format
+        if (!mongoose.Types.ObjectId.isValid(driverId) || !mongoose.Types.ObjectId.isValid(passengerId)) {
+          return res.status(400).json({ message: 'Invalid driverId or passengerId' });
+        }
+    
+        // Find the driver and passenger
+        const driver = await User.findById(driverId);
+        const passenger = await User.findById(passengerId);
+    
+        if (!driver) {
+          return res.status(404).json({ message: 'Driver not found' });
+        }
+    
+        if (!passenger) {
+          return res.status(404).json({ message: 'Passenger not found' });
+        }
+    
+        // Find the ride and update with the request details
+        const ride = await PublishRide.findOne({
+          driverId: driverId,
+          status: 'waiting'
+        });
+    
+        if (!ride) {
+          return res.status(404).json({ message: 'Ride not found' });
+        }
+    
+        ride.status = 'requested';
+        ride.passengerId = passengerId; // Assign the passengerId
+        ride.pickupLocation = pickupLocation;
+        ride.requestedDate = requestedDate;
+        ride.requestedTime = requestedTime;
+    
+        await ride.save();
+    
+        return res.status(200).json({ message: 'Request sent successfully', ride });
+      }),
 
 
     

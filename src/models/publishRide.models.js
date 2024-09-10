@@ -45,7 +45,7 @@ const publishRideSchema = new Schema({
   pricePerSeat: { type: Number, required: true },
   status: {
     type: String,
-    enum: ['waiting', 'matched', 'completed'],
+    enum: ['waiting', 'requested', 'accepted', 'completed', 'cancelled'],
     default: 'waiting'
   }
 });
