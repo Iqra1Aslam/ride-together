@@ -54,6 +54,7 @@ const driver_schema = new Schema({
         type: String,
         required: true, // CNIC is required
     },
+    fcmToken: { type: String },
     driver_lisence_image: {
         type: String,
         required:false,
