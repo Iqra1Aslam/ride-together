@@ -22,3 +22,5 @@ driverRouter.post('/upload-license-image/:id',
     upload.single('lisence_image'), 
     driver.upload_driver_license_image
 );
+driverRouter.post('/ride-request',auth_middleware.check_user_role(['driver', 'admin', 'passenger'])
+,driver.ride_request);

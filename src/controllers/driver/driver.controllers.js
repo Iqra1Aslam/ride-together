@@ -3,6 +3,8 @@ import { ApiResponse } from "../../services/ApiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import { upload_single_on_cloudinary } from "../../utils/cloudinary.js";
 
+
+import { getMessaging } from "firebase-admin/messaging";
 export const driver = {
     driver_details_add: asyncHandler(async (req, res) => {
         const user_id = req.user_id;
@@ -86,5 +88,38 @@ export const driver = {
         res.status(500).send({ success: false, message: 'Error updating location', error: error.message });
     }
 }),
+ride_request:asyncHandler(async(req,res)=>{
+    
+    
+    const user_id = req.user_id; // Ensure req.user_id is correctly set by authentication middleware
+
+    try {
+      // Fetch the driver by their user_id
+      const driver = await Driver.findById(user_id); // Fetch driver from your database
+  
+     
+    if (!driver || !driver.fcmToken) {
+      return res.status(404).json({ success: false, message: 'Driver or FCM token not found' });
+    }
+
+    // Create a message payload
+    const message = {
+      notification: {
+        title: 'New Ride Request',
+        body: 'A passenger has requested a ride from you.',
+      },
+      token: driver.fcmToken, // Send the notification to the driver's FCM token
+    };
+
+    // Send the notification
+    getMessaging()
+    .send(message)
+     res.status(200).json(new ApiResponse(200, { driver },'Notifications send successfully' ));
+} catch (error) {
+    res.status(500).send({ success: false, message: 'Error sending', error: error.message });
+}
+  
+
+})
 
 }
