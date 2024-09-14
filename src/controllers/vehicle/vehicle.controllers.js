@@ -325,44 +325,63 @@ export const vehicle = {
       
       send_request: asyncHandler(async (req, res) => {
         const { driverId, passengerId, pickupLocation, requestedDate, requestedTime } = req.body;
-    
+      
         // Validate ObjectId format
         if (!mongoose.Types.ObjectId.isValid(driverId) || !mongoose.Types.ObjectId.isValid(passengerId)) {
           return res.status(400).json({ message: 'Invalid driverId or passengerId' });
         }
-    
+      
         // Find the driver and passenger
         const driver = await User.findById(driverId);
         const passenger = await User.findById(passengerId);
-    
+      
         if (!driver) {
           return res.status(404).json({ message: 'Driver not found' });
         }
-    
+      
         if (!passenger) {
           return res.status(404).json({ message: 'Passenger not found' });
         }
-    
+      
+        // Validate and format date
+        const dateObj = new Date(requestedDate);
+        if (isNaN(dateObj.getTime())) {
+          return res.status(400).json({ message: 'Invalid date format. Use a valid date.' });
+        }
+      
+        // Validate and format time
+        const timeRegex = /^(\d{1,2}:\d{2})(\s?[APap][Mm])?$/;
+        if (!timeRegex.test(requestedTime)) {
+          return res.status(400).json({ message: 'Invalid time format. Use HH:MM AM/PM.' });
+        }
+      
+        const requestedDateTimeString = `${requestedDate} ${requestedTime}`;
+        const requestedDateTimeObj = new Date(requestedDateTimeString);
+        if (isNaN(requestedDateTimeObj.getTime())) {
+          return res.status(400).json({ message: 'Invalid requested time.' });
+        }
+      
         // Find the ride and update with the request details
         const ride = await PublishRide.findOne({
           driverId: driverId,
-          status: 'waiting'
+          status: 'waiting',
         });
-    
+      
         if (!ride) {
           return res.status(404).json({ message: 'Ride not found' });
         }
-    
+      
         ride.status = 'requested';
         ride.passengerId = passengerId; // Assign the passengerId
         ride.pickupLocation = pickupLocation;
-        ride.requestedDate = requestedDate;
-        ride.requestedTime = requestedTime;
-    
+        ride.requestedDate = dateObj;
+        ride.requestedTime = requestedDateTimeObj;
+      
         await ride.save();
-    
+      
         return res.status(200).json({ message: 'Request sent successfully', ride });
       }),
+      
 
 
     

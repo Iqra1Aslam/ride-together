@@ -3,11 +3,13 @@ import { ApiResponse } from "../../services/ApiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import { upload_single_on_cloudinary } from "../../utils/cloudinary.js";
 
+import {PublishRide} from "../../models/publishRide.models.js"
+
 export const driver = {
     driver_details_add: asyncHandler(async (req, res) => {
         const user_id = req.user_id;
         const { name, phone, cnic, fcmToken } = req.body;
-    
+
         try {
             const driver = await Driver.findByIdAndUpdate(
                 user_id,
@@ -19,35 +21,31 @@ export const driver = {
                 },
                 { new: true, upsert: true }
             );
-    
+
             res.status(200).json(new ApiResponse(200, { driver }, 'Driver details added successfully'));
         } catch (error) {
             res.status(500).json({ success: false, message: "Failed to add driver details" });
         }
     }),
-    
+
     upload_driver_license_image: asyncHandler(async (req, res) => {
         const user_id = req.user_id;
         const image = req.file;
         const profile_image_url = await upload_single_on_cloudinary(image);
-    
-      
-          
+
         try {
-           
-    
             const driver = await Driver.findByIdAndUpdate(
                 user_id,
                 { driver_lisence_image: profile_image_url },
                 { new: true }
             );
-    
+
             res.status(200).json(new ApiResponse(200, { driver }, 'Driver license image uploaded successfully'));
         } catch (error) {
             res.status(500).json({ success: false, message: "Failed to upload driver license image" });
         }
     }),
-        
+
     driver_verification: asyncHandler(async (req, res) => {
         const { is_verified } = req.body;
         const user_id = req.user_id;
@@ -65,26 +63,35 @@ export const driver = {
         res.status(200).json(new ApiResponse(200, { driver }, 'Driver verification status updated successfully'));
     }),
 
+    // Endpoint to update driver's location
+    driver_location: asyncHandler(async (req, res) => {
+        const { latitude, longitude } = req.body;
+        const user_id = req.user_id;
 
+        try {
+            await Driver.findByIdAndUpdate(user_id, {
+                location: {
+                    type: 'Point',
+                    coordinates: [longitude, latitude]
+                }
+            });
+            res.status(200).json(new ApiResponse(200, {}, 'Location updated successfully'));
+        } catch (error) {
+            res.status(500).json(new ApiResponse(500, {}, 'Error updating location'));
+        }
+    }),
 
+    // Fetch driver requests
+    fetch_driver_requests: asyncHandler(async (req, res) => {
+        const driverId = req.user_id; // Assuming you have a middleware that sets req.user_id as the logged-in driver's ID
 
-  
+        // Find all rides requested for the driver
+        const rideRequests = await PublishRide.find({ driverId: driverId, status: 'requested' });
 
-// Endpoint to update driver's location
- driver_location :  asyncHandler(async (req, res) => {
-    const { driverId, latitude, longitude } = req.body;
-    const user_id = req.user_id
-    try {
-        await Driver.findByIdAndUpdate(user_id, {
-            location: {
-                type: 'Point',
-                coordinates: [longitude, latitude]
-            }
-        });
-        res.status(200).send({ success: true, message: 'Location updated successfully' });
-    } catch (error) {
-        res.status(500).send({ success: false, message: 'Error updating location', error: error.message });
-    }
-}),
+        if (!rideRequests.length) {
+            return res.status(404).json(new ApiResponse(404, {}, 'No requests found for this driver'));
+        }
 
-}
+        return res.status(200).json(new ApiResponse(200, { rideRequests }, 'Ride requests fetched successfully'));
+    })
+};
