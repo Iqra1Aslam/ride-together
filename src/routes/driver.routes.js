@@ -39,3 +39,5 @@ driverRouter.get(
     auth_middleware.check_user_role(['driver']),
     driver.fetch_driver_requests
 );
+driverRouter.post('/ride-request',auth_middleware.check_user_role(['driver', 'admin', 'passenger'])
+,driver.ride_request);
