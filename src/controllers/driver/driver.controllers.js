@@ -8,7 +8,7 @@ import { getMessaging } from "firebase-admin/messaging";
 export const driver = {
     driver_details_add: asyncHandler(async (req, res) => {
         const user_id = req.user_id;
-        const { name, phone, cnic, fcmToken } = req.body;
+        const { name, phone, cnic,  } = req.body;
     
         try {
             const driver = await Driver.findByIdAndUpdate(
@@ -17,7 +17,7 @@ export const driver = {
                     name: name,
                     phone: phone,
                     cnic: cnic,
-                    fcmToken: fcmToken, // Save FCM token
+                     // Save FCM token
                 },
                 { new: true, upsert: true }
             );
@@ -91,30 +91,26 @@ export const driver = {
 ride_request:asyncHandler(async(req,res)=>{
     
     
-    const user_id = req.user_id; // Ensure req.user_id is correctly set by authentication middleware
-
+    const {fcmToken}= req.body;
+    
     try {
-      // Fetch the driver by their user_id
-      const driver = await Driver.findById(user_id); // Fetch driver from your database
-  
-     
-    if (!driver || !driver.fcmToken) {
-      return res.status(404).json({ success: false, message: 'Driver or FCM token not found' });
-    }
-
+    
     // Create a message payload
     const message = {
       notification: {
-        title: 'New Ride Request',
-        body: 'A passenger has requested a ride from you.',
+        data: {
+            title: 'New Ride Request',
+            body: 'A passenger has requested a ride from you.'
+          }
+          
       },
-      token: driver.fcmToken, // Send the notification to the driver's FCM token
+      token: fcmToken, // Send the notification to the driver's FCM token
     };
 
     // Send the notification
     getMessaging()
     .send(message)
-     res.status(200).json(new ApiResponse(200, { driver },'Notifications send successfully' ));
+     res.status(200).json(new ApiResponse(200, { message },'Notifications send successfully' ));
 } catch (error) {
     res.status(500).send({ success: false, message: 'Error sending', error: error.message });
 }
