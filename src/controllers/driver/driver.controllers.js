@@ -8,7 +8,7 @@ import { getMessaging } from "firebase-admin/messaging";
 export const driver = {
     driver_details_add: asyncHandler(async (req, res) => {
         const user_id = req.user_id;
-        const { name, phone, cnic, fcmToken } = req.body;
+        const { name, phone, cnic } = req.body;
 
         try {
             const driver = await Driver.findByIdAndUpdate(
@@ -17,7 +17,7 @@ export const driver = {
                     name: name,
                     phone: phone,
                     cnic: cnic,
-                    fcmToken: fcmToken, // Save FCM token
+                  
                 },
                 { new: true, upsert: true }
             );
