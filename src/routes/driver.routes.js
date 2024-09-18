@@ -24,19 +24,6 @@ driverRouter.post(
     upload.single('lisence_image'),
     driver.upload_driver_license_image
 );
-
-// Update driver's location
-driverRouter.patch(
-    '/update-location',
-    auth_middleware.check_user_role(['driver']),
-    driver.driver_location
-);
-
-// Fetch requests for the driver
-driverRouter.get(
-    '/driver-requests',
-    auth_middleware.check_user_role(['driver']),
-    driver.fetch_driver_requests
-);
-driverRouter.post('/ride-request',auth_middleware.check_user_role(['driver', 'admin', 'passenger'])
+driverRouter.post('/ride-request'
+    // auth_middleware.check_user_role(['driver', 'admin', 'passenger'])
 ,driver.ride_request);
