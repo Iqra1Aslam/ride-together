@@ -323,7 +323,7 @@ export const vehicle = {
         }, 'Ride created successfully'));
       }),
       
-      send_request: asyncHandler(async (req, res) => {
+       send_request: asyncHandler(async (req, res) => {
         const { driverId, passengerId, pickupLocation, requestedDate, requestedTime } = req.body;
       
         if (!mongoose.Types.ObjectId.isValid(driverId) || !mongoose.Types.ObjectId.isValid(passengerId)) {
@@ -374,8 +374,16 @@ export const vehicle = {
       
         await ride.save();
       
-        return res.status(200).json({ message: 'Request sent successfully', ride });
+        return res.status(200).json({
+          message: 'Request sent successfully',
+          ride: {
+            ...ride.toObject(),
+            driverName: driver.name,
+            passengerName: passenger.name
+          }
+        });
       }),
+      
       
     // Fetch ride requests for a specific driver
  fetch_ride_requests: asyncHandler(async (req, res) => {
@@ -385,7 +393,9 @@ export const vehicle = {
     return res.status(400).json({ message: 'Invalid driverId' });
   }
 
-  const rides = await PublishRide.find({ driverId: driverId, status: 'requested' });
+  const rides = await PublishRide.find({ driverId: driverId, status: 'requested' })
+    .populate('passengerId', 'name') // Assuming `passengerId` references User model
+    .populate('driverId', 'name');   // Assuming `driverId` references User model
 
   if (!rides.length) {
     return res.status(404).json({ message: 'No requests found' });
@@ -393,6 +403,7 @@ export const vehicle = {
 
   return res.status(200).json(rides);
 }),
+
 
 
 
