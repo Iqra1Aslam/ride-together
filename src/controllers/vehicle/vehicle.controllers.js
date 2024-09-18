@@ -377,16 +377,28 @@ export const vehicle = {
         return res.status(200).json({ message: 'Request sent successfully', ride });
       }),
       
+    // Fetch ride requests for a specific driver
+ fetch_ride_requests: asyncHandler(async (req, res) => {
+  const { driverId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(driverId)) {
+    return res.status(400).json({ message: 'Invalid driverId' });
+  }
+
+  const rides = await PublishRide.find({ driverId: driverId, status: 'requested' });
+
+  if (!rides.length) {
+    return res.status(404).json({ message: 'No requests found' });
+  }
+
+  return res.status(200).json(rides);
+}),
+
+
+
     
 
 
-    
-
-fetch_ride: asyncHandler(async (req, res) => {
-    
-    const passengers = await publishRide.find({ status: 'waiting' });
-    res.json(passengers);
-  }),
   //select ride
   select_ride: asyncHandler(async (req, res) => {
   
