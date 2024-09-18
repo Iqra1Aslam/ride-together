@@ -17,7 +17,6 @@ driverRouter.post(
     auth_middleware.check_user_role(['driver', 'admin', 'passenger']),
     driver.driver_details_add
 );
-
 // Upload driver's license image
 driverRouter.post(
     '/upload-license-image/:id',
