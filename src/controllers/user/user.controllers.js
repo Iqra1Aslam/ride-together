@@ -7,7 +7,7 @@ import { upload_single_on_cloudinary } from "../../utils/cloudinary.js";
 export const user = {
     user_details_add: asyncHandler(async (req, res) => {
         //get from body
-        const { full_name, phone_number, city, role } = req.body
+        const { full_name, phone_number, gender, city, role } = req.body
         const user_id = req.user_id
 
         //validation
@@ -15,6 +15,7 @@ export const user = {
             city: Joi.string().valid('Lahore').required(),
             role: Joi.string().valid('driver', 'passenger').required(),
             full_name: Joi.string().min(3).max(15).required(),
+            gender: Joi.string().min(3).max(15).required(),
             phone_number: Joi.string().min(11).max(11).required()
         })
         const { error } = userValidationSchema.validate(req.body)
@@ -26,6 +27,7 @@ export const user = {
             {
                 full_name: full_name,
                 phone_number: phone_number,
+                gender:gender,
                 city: city,
                 role: role
 
