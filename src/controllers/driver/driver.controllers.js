@@ -31,12 +31,7 @@ export const driver = {
         const user_id = req.user_id;
         const image = req.file;
         const profile_image_url = await upload_single_on_cloudinary(image);
-    
-      
-          
         try {
-           
-    
             const driver = await Driver.findByIdAndUpdate(
                 user_id,
                 { driver_lisence_image: profile_image_url },
@@ -49,22 +44,48 @@ export const driver = {
         }
     }),
         
-    driver_verification: asyncHandler(async (req, res) => {
-        const { is_verified } = req.body;
-        const user_id = req.user_id;
+    // driver_verification: asyncHandler(async (req, res) => {
+    //     const { is_verified } = req.body;
+    //     const user_id = req.user_id;
 
-        const driver = await Driver.findOneAndUpdate(
-            { driver: user_id },
-            { is_driver_verified: is_verified },
-            { new: true }
-        );
+    //     const driver = await Driver.findOneAndUpdate(
+    //         { driver: user_id },
+    //         { is_driver_verified: is_verified },
+    //         { new: true }
+    //     );
 
-        if (!driver) {
-            return res.status(404).json(new ApiResponse(404, {}, 'Driver not found.'));
+    //     if (!driver) {
+    //         return res.status(404).json(new ApiResponse(404, {}, 'Driver not found.'));
+    //     }
+
+    //     res.status(200).json(new ApiResponse(200, { driver }, 'Driver verification status updated successfully'));
+    // }),
+    verifyDriverLicense: asyncHandler(async (req, res) => {
+        const { driverId } = req.params; // Assume driverId is passed as a parameter in the URL
+        const { is_verified } = req.body; // Admin sends verification status in the request body
+        
+        try {
+            // Find the driver by ID and check if the license image exists
+            const driver = await Driver.findById(driverId).select('driver_lisence_image');
+    
+            if (!driver || !driver.driver_lisence_image) {
+                return res.status(404).json(new ApiResponse(404, {}, 'Driver license image not found.'));
+            }
+    
+            // Update the driver's verification status
+            driver.is_driver_verified = is_verified;
+            await driver.save();
+    
+            console.log('Driver verification status updated successfully.');
+            res.status(200).json(new ApiResponse(200, { driver }, 'Driver license verification status updated successfully'));
+        } catch (error) {
+            console.error('Error updating driver license verification status:', error.message);
+            res.status(500).json(new ApiResponse(500, {}, 'Failed to update driver license verification status'));
         }
-
-        res.status(200).json(new ApiResponse(200, { driver }, 'Driver verification status updated successfully'));
     }),
+    
+    
+   
 // Endpoint to update driver's location
  driver_location :  asyncHandler(async (req, res) => {
     const { driverId, latitude, longitude } = req.body;

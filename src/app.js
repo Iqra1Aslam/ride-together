@@ -12,12 +12,12 @@ import { userRouter } from './routes/user.routes.js'
 import { authRouter } from './routes/auth.routes.js'
 import { vehicleRouter } from './routes/vehicle.routes.js'
 import { driverRouter } from './routes/driver.routes.js'
-
+import {router} from './routes/admin.route.js'
 app.use('/api/v1/auth', authRouter)
 app.use('/api/v1/user', userRouter)
 app.use('/api/v1/driver', driverRouter)
 app.use('/api/v1/vehicle', vehicleRouter)
-
+app.use('/api/v1/admin', router)
 
 app.get("/api/test", (req, res) => {
     return res.json({message:"hello word"})

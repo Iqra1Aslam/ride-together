@@ -22,7 +22,8 @@ const vehicle_schema = new Schema({
         type: Number
     },
     vehicle_image: {
-        type: String
+        type: String,
+         default: 'https://shorturl.at/mpFGT'
     },
     vehicle_dox_image: {
         type: String

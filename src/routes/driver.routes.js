@@ -6,10 +6,10 @@ import { driver } from '../controllers/driver/driver.controllers.js';
 export const driverRouter = Router();
 
 // Driver verification route
-driverRouter.route('/driver-verification').patch(
-    auth_middleware.check_user_role(['driver', 'admin']), 
-    driver.driver_verification
-);
+driverRouter.route('/verifyDriverLicense/:driverId').patch( auth_middleware.check_user_role(['admin']), // Ensure this matches your role checks
+auth_middleware.check_is_admin,driver.verifyDriverLicense);
+
+
 
 // Add driver details
 driverRouter.post(
