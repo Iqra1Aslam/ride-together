@@ -367,69 +367,93 @@ vehicle_verification: asyncHandler(async (req, res) => {
         }, 'Ride created successfully'));
       }),
       
-      send_request: asyncHandler(async (req, res) => {
+       send_request: asyncHandler(async (req, res) => {
         const { driverId, passengerId, pickupLocation, requestedDate, requestedTime } = req.body;
-    
+      
         if (!mongoose.Types.ObjectId.isValid(driverId) || !mongoose.Types.ObjectId.isValid(passengerId)) {
-            return res.status(400).json({ message: 'Invalid driverId or passengerId' });
+          return res.status(400).json({ message: 'Invalid driverId or passengerId' });
         }
-    
+      
         const driver = await User.findById(driverId);
         const passenger = await User.findById(passengerId);
-    
+      
         if (!driver) {
-            return res.status(404).json({ message: 'Driver not found' });
+          return res.status(404).json({ message: 'Driver not found' });
         }
-    
+      
         if (!passenger) {
-            return res.status(404).json({ message: 'Passenger not found' });
+          return res.status(404).json({ message: 'Passenger not found' });
         }
-    
+      
         const dateObj = new Date(requestedDate);
         if (isNaN(dateObj.getTime())) {
-            return res.status(400).json({ message: 'Invalid date format. Use a valid date.' });
+          return res.status(400).json({ message: 'Invalid date format. Use a valid date.' });
         }
-    
+      
         const timeRegex = /^(\d{1,2}:\d{2})(\s?[APap][Mm])?$/;
         if (!timeRegex.test(requestedTime)) {
-            return res.status(400).json({ message: 'Invalid time format. Use HH:MM AM/PM.' });
+          return res.status(400).json({ message: 'Invalid time format. Use HH:MM AM/PM.' });
         }
-    
+      
         const requestedDateTimeString = `${requestedDate} ${requestedTime}`;
         const requestedDateTimeObj = new Date(requestedDateTimeString);
         if (isNaN(requestedDateTimeObj.getTime())) {
-            return res.status(400).json({ message: 'Invalid requested time.' });
+          return res.status(400).json({ message: 'Invalid requested time.' });
         }
-    
+      
         const ride = await PublishRide.findOne({
-            driverId: driverId,
-            status: 'waiting',
+          driverId: driverId,
+          status: 'waiting',
         });
-    
+      
         if (!ride) {
-            return res.status(404).json({ message: 'Ride not found' });
+          return res.status(404).json({ message: 'Ride not found' });
         }
-    
+      
         ride.status = 'requested';
         ride.passengerId = passengerId;
         ride.pickupLocation = pickupLocation;
         ride.requestedDate = dateObj;
         ride.requestedTime = requestedDateTimeObj;
-    
+      
         await ride.save();
-    
-        return res.status(200).json({ message: 'Request sent successfully', ride });
-    }),
-    
+      
+        return res.status(200).json({
+          message: 'Request sent successfully',
+          ride: {
+            ...ride.toObject(),
+            driverName: driver.name,
+            passengerName: passenger.name
+          }
+        });
+      }),
+      
+      
+    // Fetch ride requests for a specific driver
+ fetch_ride_requests: asyncHandler(async (req, res) => {
+  const { driverId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(driverId)) {
+    return res.status(400).json({ message: 'Invalid driverId' });
+  }
+
+  const rides = await PublishRide.find({ driverId: driverId, status: 'requested' })
+    .populate('passengerId', 'name') // Assuming `passengerId` references User model
+    .populate('driverId', 'name');   // Assuming `driverId` references User model
+
+  if (!rides.length) {
+    return res.status(404).json({ message: 'No requests found' });
+  }
+
+  return res.status(200).json(rides);
+}),
+
+
 
 
     
 
-fetch_ride: asyncHandler(async (req, res) => {
-    
-    const passengers = await publishRide.find({ status: 'waiting' });
-    res.json(passengers);
-  }),
+
   //select ride
   select_ride: asyncHandler(async (req, res) => {
   

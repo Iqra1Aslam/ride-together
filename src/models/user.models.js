@@ -7,6 +7,9 @@ const userSchema = new Schema(
         full_name: {
             type: String
         },
+        gender: {
+            type: String
+        },
         profile_image: {
             type: String,
             default: 'https://shorturl.at/mpFGT'
