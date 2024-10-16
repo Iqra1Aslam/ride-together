@@ -6,10 +6,10 @@ import { driver } from '../controllers/driver/driver.controllers.js';
 export const driverRouter = Router();
 
 // Driver verification route
-driverRouter.route('/driver-verification').patch(
-    auth_middleware.check_user_role(['driver', 'admin']), 
-    driver.driver_verification
-);
+driverRouter.route('/verifyDriverLicense/:driverId').patch( auth_middleware.check_user_role(['admin']), // Ensure this matches your role checks
+auth_middleware.check_is_admin,driver.verifyDriverLicense);
+
+
 
 // Add driver details
 driverRouter.post(
@@ -24,6 +24,4 @@ driverRouter.post(
     upload.single('lisence_image'),
     driver.upload_driver_license_image
 );
-driverRouter.post('/ride-request'
-    // auth_middleware.check_user_role(['driver', 'admin', 'passenger'])
-,driver.ride_request);
+

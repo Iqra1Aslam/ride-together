@@ -60,22 +60,66 @@ export const vehicle = {
         res.status(201).json(new ApiResponse(201, vehicle, 'vehicle info added successfully', true))
     }),
 
-    vehicle_verification: asyncHandler(async (req, res) => {
-        const { is_verified } = req.body;
-        const { vehicleId } = req.params;
+//     vehicle_verification: asyncHandler(async (req, res) => {
+      
+//         const { is_verified } = req.body; // Admin sends verification status in the request body
+//         const { vehicleId } = req.params;
+//         try {
+//           // Update the driver's verification status
+//           const vehicle = await Vehicle.findById(vehicleId).select('vehicle_image');
+//           console.log('Vehicle ID:', vehicleId);
+//           console.log('vehicle found:', vehicle);
+//           console.log('vehicle image:', vehicle ? vehicle.vehicle_image : 'No vehicle');
+//           console.log('is_verified:', is_verified);
+    
+//         if (!vehicle || !vehicle.vehicle_image) {
+//           return res.status(404).json(new ApiResponse(404, {}, 'Vehicle or vehicle_image not found.'));
+//       }
+    
 
-        const vehicle = await Vehicle.findByIdAndUpdate(
-            vehicleId,
-            { is_verified: is_verified },
-            { new: true }
-        );
+//       // Update the vehicle's verification status
+//       vehicle.is_vehicle_verified= is_verified;
+//       await vehicle.save();
 
-        if (!vehicle) {
-            return res.status(404).json(new ApiResponse(404, {}, 'Vehicle not found.'));
-        }
 
-        res.status(200).json(new ApiResponse(200, { vehicle }, 'Vehicle verification status updated successfully'));
-    }),
+
+//     res.status(200).json(new ApiResponse(200, { vehicle }, 'Vehicle verification status updated successfully'))
+//     } catch (error) {
+//         console.error('Error updating verification:', error);
+//         res.status(500).json(new ApiResponse(500, {}, 'Failed to update vehicle verification status'));
+//     }
+// }),
+       
+
+vehicle_verification: asyncHandler(async (req, res) => {
+  const { is_verified } = req.body; // Admin sends verification status in the request body
+  const { vehicleId } = req.params;
+  try {
+    console.log('Vehicle ID:', vehicleId);
+    console.log('is_verified:', is_verified);
+
+    // Fetch the vehicle using the provided ID
+    const vehicle = await Vehicle.findById(vehicleId).select('vehicle_image');
+    console.log('Vehicle found:', vehicle);
+    console.log('Vehicle image:', vehicle ? vehicle.vehicle_image : 'No vehicle');
+
+    if (!vehicle || !vehicle.vehicle_image) {
+      return res.status(404).json(new ApiResponse(404, {}, 'Vehicle or vehicle_image not found.'));
+    }
+
+    // Update the vehicle's verification status
+    vehicle.is_vehicle_verified = is_verified;
+    await vehicle.save();
+
+    res.status(200).json(new ApiResponse(200, { vehicle }, 'Vehicle verification status updated successfully'));
+  } catch (error) {
+    console.error('Error updating verification:', error);
+    res.status(500).json(new ApiResponse(500, {}, 'Failed to update vehicle verification status'));
+  }
+}),
+
+      
+    
 
     
     //         const { passengerLocation, requestedTime } = req.body;

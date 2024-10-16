@@ -35,7 +35,7 @@ export const user = {
             { new: true }
         )
         // send response
-        return res.status(201).json(new ApiResponse(201, { user }, 'Successfully added information'))
+        return res.status(200).json(new ApiResponse(200, { user }, 'Successfully added information'))
 
     }),
 
