@@ -77,7 +77,7 @@ export const vehicle = {
         res.status(200).json(new ApiResponse(200, { vehicle }, 'Vehicle verification status updated successfully'));
     }),
 
-    //     try {
+    
     //         const { passengerLocation, requestedTime } = req.body;
     
     //         // Validate input
@@ -236,6 +236,8 @@ export const vehicle = {
         res.status(500).json({ error: 'Failed to find nearby rides' });
       }
     }),
+  
+  
     
     
     
@@ -406,8 +408,40 @@ export const vehicle = {
 
 
 
+// Accept and Book Ride
+acceptAndBookRide: asyncHandler(async (req, res) => {
+  try {
+      const { rideId, passengerId } = req.body;
 
-    
+      // Find the ride
+      const ride = await PublishRide.findById(rideId);
+      if (!ride) {
+          return res.status(404).json({ message: 'Ride not found' });
+      }
+
+      // Find passenger details
+      const passenger = await User.findById(passengerId);
+      if (!passenger) {
+          return res.status(404).json({ message: 'Passenger not found' });
+      }
+
+      // Update the ride with passenger details
+      ride.passengerId = passengerId;
+      const passengerDetails = {
+          id: passenger._id,
+          name: passenger.full_name,
+          gender: passenger.gender,
+      };
+      
+      ride.status = 'accepted'; // Update the status to accepted
+      await ride.save();
+
+      return res.status(200).json({ message: 'Passenger accepted and booked', ride });
+  } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: 'Internal Server Error' });
+  }
+}),
 
 
   //select ride

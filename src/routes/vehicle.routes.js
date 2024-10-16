@@ -24,3 +24,5 @@ vehicleRouter.route('/publish-ride').post(auth_middleware.check_user_role(['driv
 // Add the new route for sending requests
 vehicleRouter.route('/send-request').post(auth_middleware.check_user_role(['driver', 'passenger']), vehicle.send_request);
 vehicleRouter.route('/driver/ride-requests/:driverId').get(auth_middleware.check_user_role(['driver', 'passenger']), vehicle.fetch_ride_requests);
+
+vehicleRouter.route('/accept-and-book').post(auth_middleware.check_user_role(['driver', 'passenger']), vehicle.acceptAndBookRide);
