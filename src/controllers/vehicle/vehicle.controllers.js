@@ -10,6 +10,7 @@ import { upload_single_on_cloudinary, upload_multiple_on_cloudinary } from "../.
 import Joi from 'joi'
 import { User } from "../../models/user.models.js";
 
+
 export const vehicle = {
   vehicle_details_add: asyncHandler(async (req, res) => {
     const { car_type, vehicle_model, vehicle_plate_number, number_of_seats, vehicle_color } = req.body;
@@ -455,13 +456,20 @@ vehicle_verification: asyncHandler(async (req, res) => {
 // Accept and Book Ride
 acceptAndBookRide: asyncHandler(async (req, res) => {
   try {
-      const { rideId, passengerId } = req.body;
+      // Use rideId instead of vehicleId
+      let { rideId, passengerId } = req.body;
 
-      // Find the ride
-      const ride = await PublishRide.findById(rideId);
+      // Log the rideId to check its format
+      console.log('rideId from request:', rideId);
+
+      // Find the ride by its _id
+      const ride = await PublishRide.findById(rideId);  // Now using rideId
       if (!ride) {
+          console.log('Ride not found for rideId:', rideId);
           return res.status(404).json({ message: 'Ride not found' });
       }
+
+      console.log('Ride found:', ride);
 
       // Find passenger details
       const passenger = await User.findById(passengerId);
@@ -469,23 +477,29 @@ acceptAndBookRide: asyncHandler(async (req, res) => {
           return res.status(404).json({ message: 'Passenger not found' });
       }
 
+      console.log('Passenger found:', passenger);
+
       // Update the ride with passenger details
       ride.passengerId = passengerId;
-      const passengerDetails = {
+      ride.passengerDetails = { // Store passenger details in the ride
           id: passenger._id,
-          name: passenger.full_name,
-          gender: passenger.gender,
+          name: passenger.full_name,  // Ensure this field exists in the User model
+          gender: passenger.gender,    // Ensure this field exists in the User model
       };
-      
+
       ride.status = 'accepted'; // Update the status to accepted
       await ride.save();
 
+      console.log('Updated ride:', ride);
+
       return res.status(200).json({ message: 'Passenger accepted and booked', ride });
   } catch (error) {
-      console.error(error);
+      console.error('Error in acceptAndBookRide:', error);
       return res.status(500).json({ message: 'Internal Server Error' });
   }
 }),
+
+
 
 
   //select ride
