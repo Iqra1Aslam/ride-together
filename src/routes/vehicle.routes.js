@@ -26,4 +26,4 @@ vehicleRouter.route('/send-request').post(auth_middleware.check_user_role(['driv
 vehicleRouter.route('/driver/ride-requests/:driverId').get(auth_middleware.check_user_role(['driver', 'passenger']), vehicle.fetch_ride_requests);
 
 vehicleRouter.route('/accept-and-book').post(auth_middleware.check_user_role(['driver', 'passenger']), vehicle.acceptAndBookRide);
-vehicleRouter.route('/booked-passengers/:rideId').get(auth_middleware.check_user_role(['driver']), vehicle.getBookedPassengers);
+vehicleRouter.route('/booked-passengers/:rideId').get(auth_middleware.check_user_role(['driver', 'passenger']), vehicle.getBookedPassengers);

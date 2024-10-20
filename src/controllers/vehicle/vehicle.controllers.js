@@ -454,74 +454,81 @@ vehicle_verification: asyncHandler(async (req, res) => {
 }),
 acceptAndBookRide: asyncHandler(async (req, res) => {
   try {
-    let { rideId, passengerId } = req.body;
+      let { rideId, passengerId } = req.body;
 
-    // Find the ride by its ID
-    const ride = await PublishRide.findById(rideId);
-    if (!ride) {
-      return res.status(404).json({ message: 'Ride not found' });
-    }
+      console.log('Received rideId:', rideId);
+      console.log('Received passengerId:', passengerId);
 
-    // Check available seats
-    if (ride.numSeats <= 0) {
-      return res.status(400).json({ message: 'No available seats' });
-    }
+      // Find the ride by its ID
+      const ride = await PublishRide.findById(rideId);
+      if (!ride) {
+          console.log('Ride not found in the database');
+          return res.status(404).json({ message: 'Ride not found' });
+      }
 
-    // Find passenger details
-    const passenger = await User.findById(passengerId);
-    if (!passenger) {
-      return res.status(404).json({ message: 'Passenger not found' });
-    }
+      console.log('Found ride:', ride);
 
-    // Update ride with passenger details and decrease the number of seats
-    ride.passengerId = passengerId;
-    ride.passengerDetails = {
-      id: passenger._id,
-      name: passenger.full_name,
-      gender: passenger.gender,
-    };
-    ride.numSeats -= 1; // Decrease the number of available seats
+      // Check available seats
+      if (ride.numSeats <= 0) {
+          return res.status(400).json({ message: 'No available seats' });
+      }
 
-    // Apply 20% discount for each additional passenger
-    const totalSeats = ride.initialNumSeats; // Assuming `initialNumSeats` stores the total seats at the start
-    const bookedSeats = totalSeats - ride.numSeats;
-    
-    if (bookedSeats > 1) {
-      // Apply discount: 20% for each additional passenger
-      const discountMultiplier = Math.min(0.2 * (bookedSeats - 1), 0.8); // Max discount is 80%
-      ride.pricePerSeat = ride.initialPricePerSeat * (1 - discountMultiplier);
-    }
+      // Find passenger details
+      const passenger = await User.findById(passengerId);
+      if (!passenger) {
+          return res.status(404).json({ message: 'Passenger not found' });
+      }
 
-    ride.status = 'accepted';
-    await ride.save();
+      // Update ride with passenger details and decrease the number of seats
+      ride.bookedPassengers.push({
+          passengerId: passenger._id,
+          passengerDetails: {
+              id: passenger._id,
+              name: passenger.full_name,
+              gender: passenger.gender,
+          },
+      });
+      ride.numSeats -= 1; // Decrease the number of available seats
 
-    return res.status(200).json({ message: 'Passenger accepted and booked', ride });
+      // Apply 20% discount for each additional passenger
+      const totalSeats = ride.initialNumSeats; // Assuming `initialNumSeats` stores the total seats at the start
+      const bookedSeats = totalSeats - ride.numSeats;
+
+      if (bookedSeats > 1) {
+          // Apply discount: 20% for each additional passenger
+          const discountMultiplier = Math.min(0.2 * (bookedSeats - 1), 0.8); // Max discount is 80%
+          ride.pricePerSeat = ride.initialPricePerSeat * (1 - discountMultiplier);
+      }
+
+      ride.status = 'accepted';
+      await ride.save();
+
+      return res.status(200).json({ message: 'Passenger accepted and booked', ride });
   } catch (error) {
-    return res.status(500).json({ message: 'Internal Server Error' });
+      console.error('Error occurred:', error);
+      return res.status(500).json({ message: 'Internal Server Error' });
   }
 }),
+
+
 // Controller function for fetching booked passengers
 getBookedPassengers: asyncHandler(async (req, res) => {
+  const rideId = req.params.rideId;
+
   try {
-    const { rideId } = req.params;
+      const ride = await PublishRide.findById(rideId);
+      if (!ride) {
+          return res.status(404).json({ message: "Ride not found" });
+      }
 
-    // Find the ride by its ID
-    const ride = await PublishRide.findById(rideId);
-    if (!ride) {
-      return res.status(404).json({ message: 'Ride not found' });
-    }
-
-    // Check if there are any booked passengers
-    if (!ride.passengerDetails || ride.passengerDetails.length === 0) {
-      return res.status(200).json({ message: 'No passengers booked for this ride' });
-    }
-
-    // Return the passenger details
-    return res.status(200).json({ passengers: ride.passengerDetails });
+      // Continue processing if ride is found
+      const bookedPassengers = ride.bookedPassengers; // Array of booked passengers
+      res.status(200).json({ bookedPassengers });
   } catch (error) {
-    return res.status(500).json({ message: 'Internal Server Error' });
+      res.status(500).json({ message: "Server Error" });
   }
 }),
+
 
 
 
