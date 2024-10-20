@@ -500,6 +500,28 @@ acceptAndBookRide: asyncHandler(async (req, res) => {
     return res.status(500).json({ message: 'Internal Server Error' });
   }
 }),
+// Controller function for fetching booked passengers
+getBookedPassengers: asyncHandler(async (req, res) => {
+  try {
+    const { rideId } = req.params;
+
+    // Find the ride by its ID
+    const ride = await PublishRide.findById(rideId);
+    if (!ride) {
+      return res.status(404).json({ message: 'Ride not found' });
+    }
+
+    // Check if there are any booked passengers
+    if (!ride.passengerDetails || ride.passengerDetails.length === 0) {
+      return res.status(200).json({ message: 'No passengers booked for this ride' });
+    }
+
+    // Return the passenger details
+    return res.status(200).json({ passengers: ride.passengerDetails });
+  } catch (error) {
+    return res.status(500).json({ message: 'Internal Server Error' });
+  }
+}),
 
 
 
