@@ -35,7 +35,7 @@ export const auth_middleware = {
             return res.status(404).json(new ApiResponse(404, {}, 'User not found'));
         }
     
-        // Check if the user is an admin
+        // // Check if the user is an admin
         if (!user.is_admin) {
             return res.status(403).json(new ApiResponse(403, {}, 'Only admin can access this route'));
         }

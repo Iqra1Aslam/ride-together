@@ -41,26 +41,37 @@ const driver_schema = new Schema({
     driver: {
         type: Schema.Types.ObjectId,
         ref: 'User',
-        required: true, // This ensures the driver is always linked to a user
+        // required: true, // This ensures the driver is always linked to a user
     },
     name: {
         type: String,
-        required: true, // Driver's name is required
+        // required: true, // Driver's name is required
     },
     phone: {
         type: String,
-        required: true, // Phone number is required
+        // required: true, // Phone number is required
     },
     cnic: {
         type: String,
-        required: true, // CNIC is required
+        // required: true, // CNIC is required
     },
-    fcmToken: { type: String },
+
     driver_lisence_image: {
         type: String,
         required:false,
         default: 'https://l1nk.dev/MTZj7'// License image URL is required
     },
+    ratings: [
+        {
+            userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+            rating: { type: Number, required: true, min: 1, max: 5 },
+            comment: { type: String }
+        }
+    ],
+    ratingCount: { type: Number, default: 0 },
+    avgRating: { type: Number, default: 0 }
+   
+    ,
     driver_id_confirmation: {
         type: String,
     },

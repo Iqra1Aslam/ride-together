@@ -39,7 +39,7 @@ updateAdmin: asyncHandler(async (req, res) => {
   const { id } = req.params;
   const updatedData = req.body;
   const updatedAdmin = await User.findByIdAndUpdate(id, updatedData, { new: true });
-  res.status(200).json(new ApiResponse(200, updatedAdmin, 'Passenger details updated successfully'));
+  res.status(200).json(new ApiResponse(200, updatedAdmin, 'Admin details updated successfully'));
 }),
 
 // Get all passengers

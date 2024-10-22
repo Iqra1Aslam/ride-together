@@ -60,30 +60,80 @@ export const driver = {
 
     //     res.status(200).json(new ApiResponse(200, { driver }, 'Driver verification status updated successfully'));
     // }),
-    verifyDriverLicense: asyncHandler(async (req, res) => {
-        const { driverId } = req.params; // Assume driverId is passed as a parameter in the URL
-        const { is_verified } = req.body; // Admin sends verification status in the request body
+    // verifyDriverLicense: asyncHandler(async (req, res) => {
+    //     const { driverId } = req.params; // Assume driverId is passed as a parameter in the URL
+    //     const { is_verified } = req.body; // Admin sends verification status in the request body
         
+        // try {
+        //     // Find the driver by ID and check if the license image exists
+        //     const driver = await Driver.findById(driverId).select('driver_lisence_image');
+    
+        //     if (!driver || !driver.driver_lisence_image) {
+        //         return res.status(404).json(new ApiResponse(404, {}, 'Driver license image not found.'));
+        //     }
+    //      // Check the driver's rating before updating the verification status
+    //      if (driver.rating < 3 && is_verified) {
+    //         return res.status(400).json(new ApiResponse(400, {}, 'Cannot verify driver with a rating below 2.'));
+    //     }
+    //         // Update the driver's verification status
+    //         driver.is_driver_verified = is_verified;
+    //         await driver.save();
+    
+    //         console.log('Driver verification status updated successfully.');
+    //         res.status(200).json(new ApiResponse(200, { driver }, 'Driver license verification status updated successfully'));
+    //     } catch (error) {
+    //         console.error('Error updating driver license verification status:', error.message);
+    //         res.status(500).json(new ApiResponse(500, {}, 'Failed to update driver license verification status'));
+    //     }
+    // }),
+    verifyDriverLicense: asyncHandler(async (req, res) => {
+        // Function to send a message to the driver (replace with actual messaging service logic)
+        const sendMessage = async (phone, message) => {
+            try {
+                // Your messaging service logic here
+                console.log(`Message sent to ${phone}: ${message}`);
+                return true;
+            } catch (error) {
+                console.error('Error sending message:', error.message);
+                return false;
+            }
+        };
+    
         try {
+            const { driverId } = req.params; // Assume driverId is passed as a parameter in the URL
+            const { is_verified, message } = req.body; // Admin sends verification status and the message in the request body
+    
             // Find the driver by ID and check if the license image exists
-            const driver = await Driver.findById(driverId).select('driver_lisence_image');
+            const driver = await Driver.findById(driverId).select('driver_lisence_image rating phone');
     
             if (!driver || !driver.driver_lisence_image) {
                 return res.status(404).json(new ApiResponse(404, {}, 'Driver license image not found.'));
             }
     
-            // Update the driver's verification status
+            // Check the driver's rating before updating the verification status
+            if (driver.rating < 3 && is_verified) {
+                
+                // Send a message to the driver regarding their low rating
+                const messageSent = await sendMessage(driver.phone, message || 'Your rating is too low to be verified. Please improve your rating to continue driving.');
+                
+                if (messageSent) {
+                    return res.status(400).json(new ApiResponse(400, {}, 'Cannot verify driver with a rating below 3. Message sent to the driver.'));
+                } else {
+                    return res.status(500).json(new ApiResponse(500, {}, 'Failed to send message to the driver.'));
+                }
+            }
+    
+            // Update the driver's verification status if the rating is acceptable
             driver.is_driver_verified = is_verified;
             await driver.save();
     
             console.log('Driver verification status updated successfully.');
-            res.status(200).json(new ApiResponse(200, { driver }, 'Driver license verification status updated successfully'));
+            res.status(200).json(new ApiResponse(200, { driver }, 'Driver license verification status updated successfully.'));
         } catch (error) {
-            console.error('Error updating driver license verification status:', error.message);
-            res.status(500).json(new ApiResponse(500, {}, 'Failed to update driver license verification status'));
+            console.error('Error updating driver license verification:', error.message);
+            res.status(500).json(new ApiResponse(500, {}, 'Error updating driver license verification', error.message));
         }
     }),
-    
     
    
 // Endpoint to update driver's location
@@ -104,6 +154,87 @@ export const driver = {
 
   
 
-})
+}),
+average_driver_rating_update: asyncHandler(async (req, res) => {
+    try {
+        let { driverId } = req.params;
+        let { newRating } = req.body;
+        driverId = driverId.replace(/^:/, '').trim();
+        // Find the driver by ID
+        const driver = await Driver.findById(driverId);
+        if (!driver) {
+            return res.status(404).json({ message: 'driver not found' });
+        }
 
+        // Calculate the new average rating
+        const totalRatings = driver.ratingCount || 0;
+        const currentAverage = driver.avgRating || 0;
+        const updatedAverage = ((currentAverage * totalRatings) + newRating) / (totalRatings + 1);
+
+        // Update driver's average rating and increment rating count
+        driver.avgRating = updatedAverage;
+        driver.ratingCount = totalRatings + 1;
+        await driver.save();
+
+        return res.status(200).json({ driverId, newAvgRating: updatedAverage });
+    } catch (error) {
+        console.error("Error updating average rating:", error.message || error);
+        return res.status(500).json({ message: 'Error updating average rating', error: error.message });
+    }
+}),
+
+// New rating for driver
+new_driver_rating: asyncHandler(async (req, res) => {
+    try {
+        const { userId, driverId, rating, comment } = req.body;
+
+        // Validate input
+        if (!userId || !driverId || !rating) {
+            return res.status(400).json({ message: 'userId, driverId, and rating are required' });
+        }
+        // Find the driver to add the rating
+        const driver = await Driver.findById(driverId)
+        if (!driver) {
+            return res.status(404).json({ message: 'Driver not found' });
+        }
+
+        // Add the new rating to the ratings array
+        driver.ratings.push({ userId, rating, comment });
+
+        // Update the rating count and calculate the new average
+        const totalRatings = driver.ratingCount || 0;
+        const currentAverage = driver.avgRating || 0;
+        const updatedAverage = ((currentAverage * totalRatings) + rating) / (totalRatings + 1);
+
+        // Update the driver's rating information
+        driver.avgRating = updatedAverage.toFixed(1);
+        driver.ratingCount = totalRatings + 1;
+
+        // Save the updated driver information
+        await driver.save();
+
+        return res.status(201).json({ message: 'Rating added successfully',driver });
+    } catch (error) {
+        return res.status(500).json({ message: 'Error creating rating', error: error.message });
+    }
+}),
+
+// Get rating
+get_driver_rating: asyncHandler(async (req, res) => {
+    try {
+        let { driverId } = req.params;
+        driverId = driverId.replace(/^:/, '').trim();
+
+        // Find the driver by ID
+        const driver = await Driver.findById(driverId);
+        if (!driver) {
+            return res.status(404).json({ message: 'driver not found' });
+        }
+
+        // Return average rating and rating count
+        return res.status(200).json({avgRating: parseFloat(driver.avgRating).toFixed(1), ratingCount: driver.ratingCount });
+    } catch (error) {
+        return res.status(500).json({ message: 'Error fetching ratings', error: error.message });
+    }
+}),
 }

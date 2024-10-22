@@ -7,9 +7,6 @@ const userSchema = new Schema(
         full_name: {
             type: String
         },
-        gender: {
-            type: String
-        },
         profile_image: {
             type: String,
             default: 'https://shorturl.at/mpFGT'
@@ -42,6 +39,15 @@ const userSchema = new Schema(
         password: {
             type: String
         }, 
+        resetPasswordToken: {
+            type: String
+        },
+        resetPasswordExpires:{
+            type:  Date
+        },
+        newPassword:{
+            type: String
+        },
         user_location: {
             type: {
                 type: String,
@@ -51,21 +57,10 @@ const userSchema = new Schema(
             coordinates: {
                 type: [Number],
                 default: [0, 0]
-            },
-            // code added by iqra
-            resetPasswordToken: {
-                type: String
-            },
-            resetPasswordExpires:{
-                type:  Date
-            },
-            newPassword:{
-                type: String
             }
         }
         
     },
-
     {
         timestamps: true
     })
