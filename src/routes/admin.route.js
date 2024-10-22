@@ -11,22 +11,24 @@ router.route('/set-admin').patch(
     admin.setAdminRole
 );
 
-// router.post('/set-admin',admin.AdminRole);
 router.route('/updateAdmin/:id').patch( auth_middleware.check_user_role(['admin']),admin.updateAdmin);
 // Route to get all passengers
-router.route('/getAllPassengers').get( auth_middleware.check_user_role(['admin']), // Ensure this matches your role checks
-auth_middleware.check_is_admin, admin.getAllPassengers);
+router.route('/getAllPassengers').get
+( 
+    auth_middleware.check_user_role(['admin']), // Ensure this matches your role checks
+auth_middleware.check_is_admin,
+ admin.getAllPassengers);
 
 // Route to delete a passenger
-router.route('/deletePassenger/:id').delete( auth_middleware.check_user_role(['admin']), admin.deletePassenger);
+router.delete('/deletePassenger/:id', auth_middleware.check_user_role(['admin']), admin.deletePassenger);
 
 // Route to update passenger details
-router.route('/updatePassenger/:id').patch( auth_middleware.check_user_role(['admin']),admin.updatePassenger);
-router.route('/getAllDrivers').get( auth_middleware.check_user_role(['admin']), // Ensure this matches your role checks
+router.patch('/updatePassenger/:id', auth_middleware.check_user_role(['admin']),admin.updatePassenger);
+router.get('/getAllDrivers',auth_middleware.check_user_role(['admin']), // Ensure this matches your role checks
 auth_middleware.check_is_admin, admin.getAllDrivers);
-router.route('/updateDriver/:id').patch( auth_middleware.check_user_role(['admin']),admin.updateDriver);
-router.route('/deleteDriver/:id').delete( auth_middleware.check_user_role(['admin']), admin.deleteDriver);
-router.route('/rides').get( auth_middleware.check_user_role(['admin']), admin.rides);
-router.route('/getAllVehicle').get( auth_middleware.check_user_role(['admin']), // Ensure this matches your role checks
+router.patch('/updateDriver/:id', auth_middleware.check_user_role(['admin']),admin.updateDriver);
+router.delete('/deleteDriver/:id',auth_middleware.check_user_role(['admin']), admin.deleteDriver);
+
+router.get('/getAllVehicle', auth_middleware.check_user_role(['admin']), // Ensure this matches your role checks
 auth_middleware.check_is_admin, admin.getAllVehicles);
 

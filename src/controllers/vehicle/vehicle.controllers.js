@@ -1,12 +1,9 @@
 import { Driver, Vehicle } from "../../models/driver.models.js";
-
 import {PublishRide} from "../../models/publishRide.models.js"
 import mongoose from 'mongoose';
-
 import { ApiResponse } from "../../services/ApiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import { upload_single_on_cloudinary, upload_multiple_on_cloudinary } from "../../utils/cloudinary.js";
-
 import Joi from 'joi'
 import { User } from "../../models/user.models.js";
 
@@ -84,7 +81,7 @@ export const vehicle = {
 
 
 
-//     res.status(200).json(new ApiResponse(200, { vehicle }, 'Vehicle verification status updated successfully'))
+//     res.status(200).json(new ApiResponse(20 0, { vehicle }, 'Vehicle verification status updated successfully'))
 //     } catch (error) {
 //         console.error('Error updating verification:', error);
 //         res.status(500).json(new ApiResponse(500, {}, 'Failed to update vehicle verification status'));
