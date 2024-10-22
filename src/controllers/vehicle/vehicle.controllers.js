@@ -7,6 +7,7 @@ import { upload_single_on_cloudinary, upload_multiple_on_cloudinary } from "../.
 import Joi from 'joi'
 import { User } from "../../models/user.models.js";
 
+
 export const vehicle = {
   vehicle_details_add: asyncHandler(async (req, res) => {
     const { car_type, vehicle_model, vehicle_plate_number, number_of_seats, vehicle_color } = req.body;
@@ -118,7 +119,7 @@ vehicle_verification: asyncHandler(async (req, res) => {
       
     
 
-    //     try {
+    
     //         const { passengerLocation, requestedTime } = req.body;
     
     //         // Validate input
@@ -277,6 +278,8 @@ vehicle_verification: asyncHandler(async (req, res) => {
         res.status(500).json({ error: 'Failed to find nearby rides' });
       }
     }),
+  
+  
     
     
     
@@ -363,6 +366,8 @@ vehicle_verification: asyncHandler(async (req, res) => {
           },
         }, 'Ride created successfully'));
       }),
+   
+   
       
        send_request: asyncHandler(async (req, res) => {
         const { driverId, passengerId, pickupLocation, requestedDate, requestedTime } = req.body;
@@ -444,11 +449,133 @@ vehicle_verification: asyncHandler(async (req, res) => {
 
   return res.status(200).json(rides);
 }),
+acceptAndBookRide: asyncHandler(async (req, res) => {
+  try {
+      let { rideId, passengerId } = req.body;
+
+      console.log('Received rideId:', rideId);
+      console.log('Received passengerId:', passengerId);
+
+      // Find the ride by its ID
+      const ride = await PublishRide.findById(rideId);
+      if (!ride) {
+          console.log('Ride not found in the database');
+          return res.status(404).json({ message: 'Ride not found' });
+      }
+
+      console.log('Found ride:', ride);
+
+      // Check available seats
+      if (ride.numSeats <= 0) {
+          return res.status(400).json({ message: 'No available seats' });
+      }
+
+      // Find passenger details
+      const passenger = await User.findById(passengerId);
+      if (!passenger) {
+          return res.status(404).json({ message: 'Passenger not found' });
+      }
+
+      // Update ride with passenger details and decrease the number of seats
+      ride.bookedPassengers.push({
+          passengerId: passenger._id,
+          passengerDetails: {
+              id: passenger._id,
+              name: passenger.full_name,
+              gender: passenger.gender,
+          },
+      });
+      ride.numSeats -= 1; // Decrease the number of available seats
+
+      // Apply 20% discount for each additional passenger
+      const totalSeats = ride.initialNumSeats; // Assuming `initialNumSeats` stores the total seats at the start
+      const bookedSeats = totalSeats - ride.numSeats;
+
+      if (bookedSeats > 1) {
+          // Apply discount: 20% for each additional passenger
+          const discountMultiplier = Math.min(0.2 * (bookedSeats - 1), 0.8); // Max discount is 80%
+          ride.pricePerSeat = ride.initialPricePerSeat * (1 - discountMultiplier);
+      }
+
+      ride.status = 'accepted';
+      await ride.save();
+
+      return res.status(200).json({ message: 'Passenger accepted and booked', ride });
+  } catch (error) {
+      console.error('Error occurred:', error);
+      return res.status(500).json({ message: 'Internal Server Error' });
+  }
+}),
+
+
+// Controller function for fetching booked passengers
+getBookedPassengers: asyncHandler(async (req, res) => {
+  const rideId = req.params.rideId;
+
+  try {
+      const ride = await PublishRide.findById(rideId);
+      if (!ride) {
+          return res.status(404).json({ message: "Ride not found" });
+      }
+
+      // Continue processing if ride is found
+      const bookedPassengers = ride.bookedPassengers; // Array of booked passengers
+      res.status(200).json({ bookedPassengers });
+  } catch (error) {
+      res.status(500).json({ message: "Server Error" });
+  }
+}),
 
 
 
 
-    
+// Accept and Book Ride
+// acceptAndBookRide: asyncHandler(async (req, res) => {
+//   try {
+//       // Use rideId instead of vehicleId
+//       let { rideId, passengerId } = req.body;
+
+//       // Log the rideId to check its format
+//       console.log('rideId from request:', rideId);
+
+//       // Find the ride by its _id
+//       const ride = await PublishRide.findById(rideId);  // Now using rideId
+//       if (!ride) {
+//           console.log('Ride not found for rideId:', rideId);
+//           return res.status(404).json({ message: 'Ride not found' });
+//       }
+
+//       console.log('Ride found:', ride);
+
+//       // Find passenger details
+//       const passenger = await User.findById(passengerId);
+//       if (!passenger) {
+//           return res.status(404).json({ message: 'Passenger not found' });
+//       }
+
+//       console.log('Passenger found:', passenger);
+
+//       // Update the ride with passenger details
+//       ride.passengerId = passengerId;
+//       ride.passengerDetails = { // Store passenger details in the ride
+//           id: passenger._id,
+//           name: passenger.full_name,  // Ensure this field exists in the User model
+//           gender: passenger.gender,    // Ensure this field exists in the User model
+//       };
+
+//       ride.status = 'accepted'; // Update the status to accepted
+//       await ride.save();
+
+//       console.log('Updated ride:', ride);
+
+//       return res.status(200).json({ message: 'Passenger accepted and booked', ride });
+//   } catch (error) {
+//       console.error('Error in acceptAndBookRide:', error);
+//       return res.status(500).json({ message: 'Internal Server Error' });
+//   }
+// }),
+
+
 
 
   //select ride

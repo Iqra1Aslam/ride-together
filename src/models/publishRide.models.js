@@ -6,16 +6,25 @@ const publishRideSchema = new Schema({
     ref: 'User',
     required: false
   },
+ 
+  passengerDetails: {
+    id: { type: Schema.Types.ObjectId, ref: 'User' },
+    name: { type: String },
+    gender: { type: String }
+  },
+ 
   driverId: {
     type: Schema.Types.ObjectId,
     ref: 'User',
     required: true
   },
-  vehicleId: { // Add this reference
+  
+  vehicleId: { // Reference to the vehicle
     type: Schema.Types.ObjectId,
     ref: 'Vehicle',
     required: true
   },
+  
   pickup_location: {
     type: {
       type: String,
@@ -27,6 +36,7 @@ const publishRideSchema = new Schema({
       required: true
     }
   },
+  
   dropLocation: {
     type: {
       type: String,
@@ -38,11 +48,28 @@ const publishRideSchema = new Schema({
       required: true
     }
   },
+  
   date: { type: Date, required: true },
   starttime: { type: Date, required: true },
   endtime: { type: Date, required: true },
+  
   numSeats: { type: Number, required: true },
+  initialNumSeats: { type: Number, required: false }, // Store initial seats for discount logic
+  initialPricePerSeat: { type: Number, required: false }, // Store initial price for discount calculation
+  
   pricePerSeat: { type: Number, required: true },
+  
+  bookedPassengers: [ // Array to store booked passengers
+    {
+      passengerId: { type: Schema.Types.ObjectId, ref: 'User' },
+      passengerDetails: {
+        id: { type: Schema.Types.ObjectId, ref: 'User' },
+        name: { type: String },
+        gender: { type: String }
+      }
+    }
+  ],
+  
   status: {
     type: String,
     enum: ['waiting', 'requested', 'accepted', 'completed', 'cancelled'],
@@ -50,6 +77,7 @@ const publishRideSchema = new Schema({
   }
 });
 
+// Create a geospatial index on the pickup location
 publishRideSchema.index({ pickup_location: '2dsphere' });
 
 export const PublishRide = model('PublishRide', publishRideSchema);
