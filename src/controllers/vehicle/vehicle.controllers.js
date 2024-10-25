@@ -316,7 +316,7 @@ is_nearestVehicle: asyncHandler(async (req, res) => {
       {
         $match: {
           starttime: { $gte: timeBefore, $lte: timeAfter },
-          status: 'waiting',
+          status: { $in: ['waiting', 'requested'] },
           numSeats: { $lte: 4 },
         },
       },
