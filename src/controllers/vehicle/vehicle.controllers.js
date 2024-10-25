@@ -278,116 +278,101 @@ vehicle_verification: asyncHandler(async (req, res) => {
     //     res.status(500).json({ error: 'Failed to find nearby rides' });
     //   }
     // }),
-    is_nearestVehicle: asyncHandler(async (req, res) => {
-      try {
-        const { passengerLocation, requestedTime } = req.body;
-    
-        // Validate input
-        if (!passengerLocation || !requestedTime) {
-          return res.status(400).json({ message: 'Passenger location and requested time are required.' });
-        }
-    
-        // Construct the requested date with the time
-        const currentDate = new Date();
-        const dateString = currentDate.toDateString();
-        const requestedDateString = `${dateString} ${requestedTime}`;
-        const requestedDate = new Date(requestedDateString);
-    
-        // Define the time range: 15 minutes before and after the requested time
-        const timeBefore = new Date(requestedDate);
-        timeBefore.setMinutes(requestedDate.getMinutes() - 15);
-    
-        const timeAfter = new Date(requestedDate);
-        timeAfter.setMinutes(requestedDate.getMinutes() + 15);
-    
-        // Use $geoNear to find nearby rides within 5km and the specified time range
-        const nearbyRides = await PublishRide.aggregate([
-          {
-            $geoNear: {
-              near: passengerLocation,
-              distanceField: 'distance',
-              maxDistance: 5000,
-              spherical: true,
-              key: 'pickup_location',
-            },
-          },
-          {
-            $match: {
-              starttime: {
-                $gte: timeBefore,
-                $lte: timeAfter,
-              },
-              status: 'waiting',
-              numSeats: { $lte: 4 }, // Ensure rides have 4 or fewer available seats
-            },
-          },
-          // Lookup vehicle details
-          {
-            $lookup: {
-              from: 'vehicles',
-              localField: 'driverId',
-              foreignField: 'driver',
-              as: 'vehicleDetails',
-            },
-          },
-          {
-            $unwind: {
-              path: '$vehicleDetails',
-              preserveNullAndEmptyArrays: true,
-            },
-          },
-          // Lookup driver details
-          {
-            $lookup: {
-              from: 'users',
-              localField: 'driverId',
-              foreignField: 'drivers',
-              as: 'driverDetails',
-            },
-          },
-          {
-            $unwind: {
-              path: '$driverDetails',
-              preserveNullAndEmptyArrays: true,
-            },
-          },
-          {
-            $project: {
-              driverId: 1,
-              pickup_location: 1,
-              dropLocation: 1,
-              date: 1,
-              starttime: 1,
-              endtime: 1,
-              numSeats: 1,
-              pricePerSeat: 1,
-              status: 1,
-              distance: 1,
-              'vehicleDetails.vehicle_model': 1,
-              'vehicleDetails.vehicle_color': 1,
-              'vehicleDetails.vehicle_plate_number': 1,
-              'vehicleDetails.number_of_seats': 1,
-              'vehicleDetails.vehicle_image': 1,
-              'driverDetails.name': 1,
-              'driverDetails.phone': 1,
-            },
-          },
-        ]);
-    
-        // Log nearby rides found
-        console.log('Nearby Rides:', nearbyRides);
-    
-        // Respond with nearby rides or an error if none found
-        if (nearbyRides.length === 0) {
-          return res.status(404).json({ message: 'No rides found nearby' });
-        }
-    
-        res.json(nearbyRides);
-      } catch (err) {
-        console.error('Error finding nearby rides:', err);
-        res.status(500).json({ error: 'Failed to find nearby rides' });
-      }
-    }),
+
+
+//new
+is_nearestVehicle: asyncHandler(async (req, res) => {
+  try {
+    const { passengerLocation, requestedTime } = req.body;
+
+    // Validate input
+    if (!passengerLocation || !requestedTime) {
+      return res.status(400).json({ message: 'Passenger location and requested time are required.' });
+    }
+
+    // Construct the requested date with the time
+    const currentDate = new Date();
+    const dateString = currentDate.toDateString();
+    const requestedDateString = `${dateString} ${requestedTime}`;
+    const requestedDate = new Date(requestedDateString);
+
+    // Define the time range: 15 minutes before and after the requested time
+    const timeBefore = new Date(requestedDate);
+    timeBefore.setMinutes(requestedDate.getMinutes() - 15);
+    const timeAfter = new Date(requestedDate);
+    timeAfter.setMinutes(requestedDate.getMinutes() + 15);
+
+    // Use $geoNear to find nearby rides within 5km and the specified time range
+    const nearbyRides = await PublishRide.aggregate([
+      {
+        $geoNear: {
+          near: passengerLocation,
+          distanceField: 'distance',
+          maxDistance: 5000,
+          spherical: true,
+          key: 'pickup_location',
+        },
+      },
+      {
+        $match: {
+          starttime: { $gte: timeBefore, $lte: timeAfter },
+          status: 'waiting',
+          numSeats: { $lte: 4 },
+        },
+      },
+      {
+        $project: {
+          driverId: 1,
+          pickup_location: 1,
+          dropLocation: 1,
+          date: 1,
+          starttime: 1,
+          endtime: 1,
+          numSeats: 1,
+          pricePerSeat: 1,
+          status: 1,
+          distance: 1,
+          'vehicleDetails.vehicle_model': 1,
+          'vehicleDetails.vehicle_color': 1,
+          'vehicleDetails.vehicle_plate_number': 1,
+          'vehicleDetails.number_of_seats': 1,
+          'vehicleDetails.vehicle_image': 1,
+          'driverDetails.name': 1,
+          'driverDetails.phone': 1,
+        },
+      },
+    ]);
+
+    // Ride ki status ko update karna hai jab koi user ride book karta hai
+    if (nearbyRides.length > 0) {
+      nearbyRides.forEach(async (ride) => {
+        ride.status = 'booked';
+        await ride.save();
+      });
+    }
+
+    // Log nearby rides found
+    console.log('Nearby Rides:', nearbyRides);
+
+    // Respond with nearby rides or an error if none found
+    if (nearbyRides.length === 0) {
+      return res.status(404).json({ message: 'No rides found nearby' });
+    }
+    res.json(nearbyRides);
+  } catch (error) {
+    console.error('Error finding nearby rides:', error);
+    res.status(500).json({ error: 'Failed to find nearby rides' });
+  }
+}),
+
+
+
+
+
+
+
+
+
     
   
     
