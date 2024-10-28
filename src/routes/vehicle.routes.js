@@ -20,7 +20,9 @@ vehicleRouter.route('/vehicle-images-upload').patch(auth_middleware.check_user_r
         maxCount: 1
     }
 ]), vehicle.vehicle_images_upload);
-vehicleRouter.route('/is_nearestVehicle').post(auth_middleware.check_user_role(['driver', 'passenger']), vehicle.is_nearestVehicle);
+vehicleRouter.route('/is_nearestVehicle').post(
+    // auth_middleware.check_user_role(['driver', 'passenger']),
+     vehicle.is_nearestVehicle);
 vehicleRouter.route('/publish-ride').post(
     auth_middleware.check_user_role(['driver', 'admin', 'passenger']),
      vehicle.publish_ride);
