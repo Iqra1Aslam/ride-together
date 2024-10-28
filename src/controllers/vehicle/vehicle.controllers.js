@@ -169,116 +169,211 @@ vehicle_verification: asyncHandler(async (req, res) => {
     // }),
     
       
-    is_nearestVehicle: asyncHandler(async (req, res) => {
-      try {
-        const { passengerLocation, requestedTime } = req.body;
+    // is_nearestVehicle: asyncHandler(async (req, res) => {
+    //   try {
+    //     const { passengerLocation, requestedTime } = req.body;
     
-        // Validate input
-        if (!passengerLocation || !requestedTime) {
-          return res.status(400).json({ message: 'Passenger location and requested time are required.' });
-        }
+    //     // Validate input
+    //     if (!passengerLocation || !requestedTime) {
+    //       return res.status(400).json({ message: 'Passenger location and requested time are required.' });
+    //     }
     
-        // Construct the requested date with the time
-        const currentDate = new Date();
-        const dateString = currentDate.toDateString();
-        const requestedDateString = `${dateString} ${requestedTime}`;
-        const requestedDate = new Date(requestedDateString);
+    //     // Construct the requested date with the time
+    //     const currentDate = new Date();
+    //     const dateString = currentDate.toDateString();
+    //     const requestedDateString = `${dateString} ${requestedTime}`;
+    //     const requestedDate = new Date(requestedDateString);
     
-        // Define the time range: 15 minutes before and after the requested time
-        const timeBefore = new Date(requestedDate);
-        timeBefore.setMinutes(requestedDate.getMinutes() - 15);
+    //     // Define the time range: 15 minutes before and after the requested time
+    //     const timeBefore = new Date(requestedDate);
+    //     timeBefore.setMinutes(requestedDate.getMinutes() - 15);
     
-        const timeAfter = new Date(requestedDate);
-        timeAfter.setMinutes(requestedDate.getMinutes() + 15);
+    //     const timeAfter = new Date(requestedDate);
+    //     timeAfter.setMinutes(requestedDate.getMinutes() + 15);
     
-        // Use $geoNear to find nearby rides within 5km and the specified time range
-        const nearbyRides = await PublishRide.aggregate([
-          {
-            $geoNear: {
-              near: passengerLocation,
-              distanceField: 'distance',
-              maxDistance: 5000,
-              spherical: true,
-              key: 'pickup_location',
-            },
-          },
-          {
-            $match: {
-              starttime: {
-                $gte: timeBefore,
-                $lte: timeAfter,
-              },
-              status: 'waiting',
-            },
-          },
-          // Lookup vehicle details
-          {
-            $lookup: {
-              from: 'vehicles',
-              localField: 'driverId',
-              foreignField: 'driver',
-              as: 'vehicleDetails',
-            },
-          },
-          {
-            $unwind: {
-              path: '$vehicleDetails',
-              preserveNullAndEmptyArrays: true,
-            },
-          },
-          // Lookup driver details
-          {
-            $lookup: {
-              from: 'users', // Collection name is 'drivers'
-              localField: 'driverId', // Referencing the driverId from PublishRide
-              foreignField: 'drivers', // Matching with the _id of the drivers collection
-              as: 'driverDetails', // Output array field to store joined data
-            },
-          },
-          {
-            $unwind: {
-              path: '$driverDetails',
-              preserveNullAndEmptyArrays: true, // Allow rides without driver details
-            },
-          },
-          {
-            $project: {
-              driverId: 1,
-              pickup_location: 1,
-              dropLocation: 1,
-              date: 1,
-              starttime: 1,
-              endtime: 1,
-              numSeats: 1,
-              pricePerSeat: 1,
-              status: 1,
-              distance: 1,
-              'vehicleDetails.vehicle_model': 1,
-              'vehicleDetails.vehicle_color': 1,
-              'vehicleDetails.vehicle_plate_number': 1,
-              'vehicleDetails.number_of_seats': 1,
-              'vehicleDetails.vehicle_image': 1,
-              'driverDetails.name': 1, // Include the driver's name
-              'driverDetails.phone': 1, // Include the driver's phone
-            },
-          },
-        ]);
+    //     // Use $geoNear to find nearby rides within 5km and the specified time range
+    //     const nearbyRides = await PublishRide.aggregate([
+    //       {
+    //         $geoNear: {
+    //           near: passengerLocation,
+    //           distanceField: 'distance',
+    //           maxDistance: 5000,
+    //           spherical: true,
+    //           key: 'pickup_location',
+    //         },
+    //       },
+    //       {
+    //         $match: {
+    //           starttime: {
+    //             $gte: timeBefore,
+    //             $lte: timeAfter,
+    //           },
+    //           status: 'waiting',
+    //         },
+    //       },
+    //       // Lookup vehicle details
+    //       {
+    //         $lookup: {
+    //           from: 'vehicles',
+    //           localField: 'driverId',
+    //           foreignField: 'driver',
+    //           as: 'vehicleDetails',
+    //         },
+    //       },
+    //       {
+    //         $unwind: {
+    //           path: '$vehicleDetails',
+    //           preserveNullAndEmptyArrays: true,
+    //         },
+    //       },
+    //       // Lookup driver details
+    //       {
+    //         $lookup: {
+    //           from: 'users', // Collection name is 'drivers'
+    //           localField: 'driverId', // Referencing the driverId from PublishRide
+    //           foreignField: 'drivers', // Matching with the _id of the drivers collection
+    //           as: 'driverDetails', // Output array field to store joined data
+    //         },
+    //       },
+    //       {
+    //         $unwind: {
+    //           path: '$driverDetails',
+    //           preserveNullAndEmptyArrays: true, // Allow rides without driver details
+    //         },
+    //       },
+    //       {
+    //         $project: {
+    //           driverId: 1,
+    //           pickup_location: 1,
+    //           dropLocation: 1,
+    //           date: 1,
+    //           starttime: 1,
+    //           endtime: 1,
+    //           numSeats: 1,
+    //           pricePerSeat: 1,
+    //           status: 1,
+    //           distance: 1,
+    //           'vehicleDetails.vehicle_model': 1,
+    //           'vehicleDetails.vehicle_color': 1,
+    //           'vehicleDetails.vehicle_plate_number': 1,
+    //           'vehicleDetails.number_of_seats': 1,
+    //           'vehicleDetails.vehicle_image': 1,
+    //           'driverDetails.name': 1, // Include the driver's name
+    //           'driverDetails.phone': 1, // Include the driver's phone
+    //         },
+    //       },
+    //     ]);
     
-        // Log nearby rides found
-        console.log('Nearby Rides:', nearbyRides);
+    //     // Log nearby rides found
+    //     console.log('Nearby Rides:', nearbyRides);
     
-        // Respond with nearby rides or an error if none found
-        if (nearbyRides.length === 0) {
-          return res.status(404).json({ message: 'No rides found nearby' });
-        }
+    //     // Respond with nearby rides or an error if none found
+    //     if (nearbyRides.length === 0) {
+    //       return res.status(404).json({ message: 'No rides found nearby' });
+    //     }
     
-        res.json(nearbyRides);
-      } catch (err) {
-        console.error('Error finding nearby rides:', err);
-        res.status(500).json({ error: 'Failed to find nearby rides' });
-      }
-    }),
-  
+    //     res.json(nearbyRides);
+    //   } catch (err) {
+    //     console.error('Error finding nearby rides:', err);
+    //     res.status(500).json({ error: 'Failed to find nearby rides' });
+    //   }
+    // }),
+
+
+//new
+is_nearestVehicle: asyncHandler(async (req, res) => {
+  try {
+    const { passengerLocation, requestedTime } = req.body;
+
+    // Validate input
+    if (!passengerLocation || !requestedTime) {
+      return res.status(400).json({ message: 'Passenger location and requested time are required.' });
+    }
+
+    // Construct the requested date with the time
+    const currentDate = new Date();
+    const dateString = currentDate.toDateString();
+    const requestedDateString = `${dateString} ${requestedTime}`;
+    const requestedDate = new Date(requestedDateString);
+
+    // Define the time range: 15 minutes before and after the requested time
+    const timeBefore = new Date(requestedDate);
+    timeBefore.setMinutes(requestedDate.getMinutes() - 15);
+    const timeAfter = new Date(requestedDate);
+    timeAfter.setMinutes(requestedDate.getMinutes() + 15);
+
+    // Use $geoNear to find nearby rides within 5km and the specified time range
+    const nearbyRides = await PublishRide.aggregate([
+      {
+        $geoNear: {
+          near: passengerLocation,
+          distanceField: 'distance',
+          maxDistance: 5000,
+          spherical: true,
+          key: 'pickup_location',
+        },
+      },
+      {
+        $match: {
+          starttime: { $gte: timeBefore, $lte: timeAfter },
+          status: { $in: ['waiting', 'requested'] },
+          numSeats: { $lte: 4 },
+        },
+      },
+      {
+        $project: {
+          driverId: 1,
+          pickup_location: 1,
+          dropLocation: 1,
+          date: 1,
+          starttime: 1,
+          endtime: 1,
+          numSeats: 1,
+          pricePerSeat: 1,
+          status: 1,
+          distance: 1,
+          'vehicleDetails.vehicle_model': 1,
+          'vehicleDetails.vehicle_color': 1,
+          'vehicleDetails.vehicle_plate_number': 1,
+          'vehicleDetails.number_of_seats': 1,
+          'vehicleDetails.vehicle_image': 1,
+          'driverDetails.name': 1,
+          'driverDetails.phone': 1,
+        },
+      },
+    ]);
+
+    // Ride ki status ko update karna hai jab koi user ride book karta hai
+    if (nearbyRides.length > 0) {
+      nearbyRides.forEach(async (ride) => {
+        ride.status = 'booked';
+        await ride.save();
+      });
+    }
+
+    // Log nearby rides found
+    console.log('Nearby Rides:', nearbyRides);
+
+    // Respond with nearby rides or an error if none found
+    if (nearbyRides.length === 0) {
+      return res.status(404).json({ message: 'No rides found nearby' });
+    }
+    res.json(nearbyRides);
+  } catch (error) {
+    console.error('Error finding nearby rides:', error);
+    res.status(500).json({ error: 'Failed to find nearby rides' });
+  }
+}),
+
+
+
+
+
+
+
+
+
+    
   
     
     
@@ -528,52 +623,6 @@ getBookedPassengers: asyncHandler(async (req, res) => {
 
 
 
-
-// Accept and Book Ride
-// acceptAndBookRide: asyncHandler(async (req, res) => {
-//   try {
-//       // Use rideId instead of vehicleId
-//       let { rideId, passengerId } = req.body;
-
-//       // Log the rideId to check its format
-//       console.log('rideId from request:', rideId);
-
-//       // Find the ride by its _id
-//       const ride = await PublishRide.findById(rideId);  // Now using rideId
-//       if (!ride) {
-//           console.log('Ride not found for rideId:', rideId);
-//           return res.status(404).json({ message: 'Ride not found' });
-//       }
-
-//       console.log('Ride found:', ride);
-
-//       // Find passenger details
-//       const passenger = await User.findById(passengerId);
-//       if (!passenger) {
-//           return res.status(404).json({ message: 'Passenger not found' });
-//       }
-
-//       console.log('Passenger found:', passenger);
-
-//       // Update the ride with passenger details
-//       ride.passengerId = passengerId;
-//       ride.passengerDetails = { // Store passenger details in the ride
-//           id: passenger._id,
-//           name: passenger.full_name,  // Ensure this field exists in the User model
-//           gender: passenger.gender,    // Ensure this field exists in the User model
-//       };
-
-//       ride.status = 'accepted'; // Update the status to accepted
-//       await ride.save();
-
-//       console.log('Updated ride:', ride);
-
-//       return res.status(200).json({ message: 'Passenger accepted and booked', ride });
-//   } catch (error) {
-//       console.error('Error in acceptAndBookRide:', error);
-//       return res.status(500).json({ message: 'Internal Server Error' });
-//   }
-// }),
 
 
 
