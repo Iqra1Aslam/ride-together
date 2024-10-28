@@ -18,6 +18,11 @@ const publishRideSchema = new Schema({
     ref: 'User',
     required: true
   },
+
+  driverAvailability:{
+    type: Boolean,
+    default: true
+  },
   
   vehicleId: { // Reference to the vehicle
     type: Schema.Types.ObjectId,
@@ -72,9 +77,10 @@ const publishRideSchema = new Schema({
   
   status: {
     type: String,
-    enum: ['waiting', 'requested', 'accepted', 'completed', 'cancelled'],
+    enum: ['pending', 'waiting', 'requested', 'accepted', 'completed', 'cancelled'],
     default: 'waiting'
-  }
+  },
+  booked_seats: { type: Number, default: 0 }
 });
 
 // Create a geospatial index on the pickup location
