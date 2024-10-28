@@ -60,81 +60,36 @@ export const driver = {
 
     //     res.status(200).json(new ApiResponse(200, { driver }, 'Driver verification status updated successfully'));
     // }),
-    // verifyDriverLicense: asyncHandler(async (req, res) => {
-    //     const { driverId } = req.params; // Assume driverId is passed as a parameter in the URL
-    //     const { is_verified } = req.body; // Admin sends verification status in the request body
-        
-        // try {
-        //     // Find the driver by ID and check if the license image exists
-        //     const driver = await Driver.findById(driverId).select('driver_lisence_image');
-    
-        //     if (!driver || !driver.driver_lisence_image) {
-        //         return res.status(404).json(new ApiResponse(404, {}, 'Driver license image not found.'));
-        //     }
-    //      // Check the driver's rating before updating the verification status
-    //      if (driver.rating < 3 && is_verified) {
-    //         return res.status(400).json(new ApiResponse(400, {}, 'Cannot verify driver with a rating below 2.'));
-    //     }
-    //         // Update the driver's verification status
-    //         driver.is_driver_verified = is_verified;
-    //         await driver.save();
-    
-    //         console.log('Driver verification status updated successfully.');
-    //         res.status(200).json(new ApiResponse(200, { driver }, 'Driver license verification status updated successfully'));
-    //     } catch (error) {
-    //         console.error('Error updating driver license verification status:', error.message);
-    //         res.status(500).json(new ApiResponse(500, {}, 'Failed to update driver license verification status'));
-    //     }
-    // }),
     verifyDriverLicense: asyncHandler(async (req, res) => {
-        // Function to send a message to the driver (replace with actual messaging service logic)
-        const sendMessage = async (phone, message) => {
-            try {
-                // Your messaging service logic here
-                console.log(`Message sent to ${phone}: ${message}`);
-                return true;
-            } catch (error) {
-                console.error('Error sending message:', error.message);
-                return false;
-            }
-        };
-    
+        const { driverId } = req.params; // Assume driverId is passed as a parameter in the URL
+        const { is_verified } = req.body; // Admin sends verification status in the request body
+        
         try {
-            const { driverId } = req.params; // Assume driverId is passed as a parameter in the URL
-            const { is_verified, message } = req.body; // Admin sends verification status and the message in the request body
-    
-            // Find the driver by ID and check if the license image exists
-            const driver = await Driver.findById(driverId).select('driver_lisence_image rating phone');
-    
-            if (!driver || !driver.driver_lisence_image) {
-                return res.status(404).json(new ApiResponse(404, {}, 'Driver license image not found.'));
-            }
-    
-            // Check the driver's rating before updating the verification status
-            if (driver.rating < 3 && is_verified) {
-                
-                // Send a message to the driver regarding their low rating
-                const messageSent = await sendMessage(driver.phone, message || 'Your rating is too low to be verified. Please improve your rating to continue driving.');
-                
-                if (messageSent) {
-                    return res.status(400).json(new ApiResponse(400, {}, 'Cannot verify driver with a rating below 3. Message sent to the driver.'));
-                } else {
-                    return res.status(500).json(new ApiResponse(500, {}, 'Failed to send message to the driver.'));
-                }
-            }
-    
-            // Update the driver's verification status if the rating is acceptable
-            driver.is_driver_verified = is_verified;
-            await driver.save();
-    
-            console.log('Driver verification status updated successfully.');
-            res.status(200).json(new ApiResponse(200, { driver }, 'Driver license verification status updated successfully.'));
-        } catch (error) {
-            console.error('Error updating driver license verification:', error.message);
-            res.status(500).json(new ApiResponse(500, {}, 'Error updating driver license verification', error.message));
+           
+            // Find the driver by ID and check if the license image exists, and retrieve avgRating
+        const driver = await Driver.findById(driverId).select('driver_lisence_image avgRating');
+
+        if (!driver || !driver.driver_lisence_image) {
+            return res.status(404).json(new ApiResponse(404, {}, 'Driver license image not found.'));
         }
-    }),
-    
+
+        // Check the driver's average rating before updating the verification status
+        if (driver.avgRating < 3 && is_verified) {
+            return res.status(400).json(new ApiResponse(400, {}, 'Cannot verify driver with an average rating below 3.'));
+        }
+
+        // Update the driver's verification status
+        driver.is_driver_verified = is_verified;
+        await driver.save();
+
+        console.log('Driver verification status updated successfully.');
+        res.status(200).json(new ApiResponse(200, { driver }, 'Driver license verification status updated successfully'));
+    } catch (error) {
+        console.error('Error updating driver license verification status:', error.message);
+        res.status(500).json(new ApiResponse(500, {}, 'Failed to update driver license verification status'));
+    }
+}),
+   
    
 // Endpoint to update driver's location
  driver_location :  asyncHandler(async (req, res) => {

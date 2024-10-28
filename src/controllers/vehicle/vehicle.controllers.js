@@ -290,7 +290,7 @@ vehicle_verification: asyncHandler(async (req, res) => {
     
  
       publish_ride: asyncHandler(async (req, res) => {
-        const { pickup_location, dropLocation, date, starttime, endtime, numSeats, pricePerSeat } = req.body;
+        const { pickup_location, dropLocation, date, starttime, endtime, numSeats, pricePerSeat} = req.body;
         const driverId = req.user_id; // Assuming user ID is stored in req.user_id
       
         // Validate the input
@@ -336,7 +336,7 @@ vehicle_verification: asyncHandler(async (req, res) => {
           endtime: endTimeObj,
           numSeats,
           pricePerSeat,
-          status: 'waiting',
+          status: 'active',
           driverId: driverId,
           vehicleId: vehicle._id, // Link the vehicle's ID
         });
@@ -606,9 +606,63 @@ getBookedPassengers: asyncHandler(async (req, res) => {
     await ride.save();
 
     return res.status(200).json({ message: 'Ride matched successfully', ride });
-  })
-  
+  }),
+  bookRide: asyncHandler(async (req, res) => {
+    const { passengerId, driverId } = req.body;
 
-    
+    try {
+        // Find an active ride by driverId
+        const ride = await PublishRide.findOne({ driverId: driverId, status: 'active' });
+
+        // Check if an active ride was found and if seats are available
+        if (!ride) {
+            return res.status(404).json(new ApiResponse(404, {}, 'No active ride found for this driver.'));
+        }
+        if (ride.availableSeats === 0) {
+            return res.status(400).json(new ApiResponse(400, {}, 'No seats available for this ride.'));
+        }
+
+        // Add passenger to the ride's bookedPassengers array
+        ride.bookedPassengers.push(passengerId);
+        ride.availableSeats -= 1;
+
+        // If seats are full, mark the ride as completed
+        if (ride.availableSeats === 0) {
+            ride.status = 'completed';
+        }
+
+        await ride.save();
+
+        return res.status(200).json(new ApiResponse(200, { ride }, 'Passenger added to ride successfully.'));
+    } catch (error) {
+        return res.status(500).json(new ApiResponse(500, {}, 'Error booking ride', error.message));
+    }
+}),
+acceptPassenger: asyncHandler(async (req, res) => {
+  const { driverId, passengerId } = req.body;
+
+  try {
+      // Check if there is an active ride by the driver with the requested passenger
+      const ride = await PublishRide.findOne({ 
+          driverId: driverId, 
+          status: 'active', 
+          bookedPassengers: { $elemMatch: { _id: passengerId } } // Adjust query for object IDs
+      });
+
+      if (!ride) {
+          return res.status(404).json(new ApiResponse(404, {}, 'Ride not found or already completed, or passenger not in booking list.'));
+      }
+
+      // Confirm acceptance (if additional logic is needed, handle it here)
+      // Example: Update any status of the passenger if necessary
+
+      await ride.save(); // Save if any changes were made
+
+      return res.status(200).json(new ApiResponse(200, { ride }, 'Passenger request accepted.'));
+  } catch (error) {
+      console.error('Error accepting passenger:', error); // Log the error for debugging
+      return res.status(500).json(new ApiResponse(500, {}, 'Error accepting passenger', error.message));
+  }
+}),
 
 }

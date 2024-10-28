@@ -56,7 +56,7 @@ const publishRideSchema = new Schema({
   numSeats: { type: Number, required: true },
   initialNumSeats: { type: Number, required: false }, // Store initial seats for discount logic
   initialPricePerSeat: { type: Number, required: false }, // Store initial price for discount calculation
-  
+  availableSeats: { type: Number, default:4 },
   pricePerSeat: { type: Number, required: true },
   
   bookedPassengers: [ // Array to store booked passengers
@@ -72,8 +72,8 @@ const publishRideSchema = new Schema({
   
   status: {
     type: String,
-    enum: ['waiting', 'requested', 'accepted', 'completed', 'cancelled'],
-    default: 'waiting'
+    enum: ['waiting', 'requested','active', 'accepted', 'completed', 'cancelled'],
+    default: 'active'
   }
 });
 
