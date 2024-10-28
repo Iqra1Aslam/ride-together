@@ -11,7 +11,8 @@ router.route('/set-admin').patch(
     admin.setAdminRole
 );
 
-router.route('/updateAdmin/:id').patch( auth_middleware.check_user_role(['admin']),admin.updateAdmin);
+router.route('/updateAdmin/:id').patch( 
+    auth_middleware.check_user_role(['admin']),admin.updateAdmin);
 // Route to get all passengers
 router.get('/getAllPassengers',
 

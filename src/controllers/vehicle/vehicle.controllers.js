@@ -437,7 +437,7 @@ is_nearestVehicle: asyncHandler(async (req, res) => {
           date: 1,
           starttime: 1,
           endtime: 1,
-          numSeats: 1,
+          availableSeats: 1, // Include availableSeats in the result
           pricePerSeat: 1,
           status: 1,
           distance: 1,
@@ -463,6 +463,7 @@ is_nearestVehicle: asyncHandler(async (req, res) => {
     res.status(500).json({ error: 'Failed to find nearby rides' });
   }
 }),
+
 
 
 

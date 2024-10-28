@@ -21,7 +21,7 @@ vehicleRouter.route('/vehicle-images-upload').patch(auth_middleware.check_user_r
     }
 ]), vehicle.vehicle_images_upload);
 vehicleRouter.route('/is_nearestVehicle').post(
-    // auth_middleware.check_user_role(['driver', 'passenger']),
+    auth_middleware.check_user_role(['driver', 'passenger']),
      vehicle.is_nearestVehicle);
 vehicleRouter.route('/publish-ride').post(
     auth_middleware.check_user_role(['driver', 'admin', 'passenger']),
@@ -35,7 +35,7 @@ vehicleRouter.route('/accept-and-book').post(auth_middleware.check_user_role(['d
 vehicleRouter.route('/booked-passengers/:rideId').get(auth_middleware.check_user_role(['driver', 'passenger']), vehicle.getBookedPassengers);
 vehicleRouter.route('/book-ride')
 .post(
-    auth_middleware.check_user_role(['driver', 'passenger']), 
+    // auth_middleware.check_user_role(['driver', 'passenger']), 
 vehicle.bookRide);
 vehicleRouter.route('/accept-ride')
 .post(
