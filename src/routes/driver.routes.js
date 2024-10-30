@@ -8,8 +8,9 @@ export const driverRouter = Router();
 // Driver verification route
 driverRouter.patch(
     '/verifyDriverLicense/:driverId',
- auth_middleware.check_user_role(['admin']), // Ensure this matches your role checks
-auth_middleware.check_is_admin,driver.verifyDriverLicense);
+//  auth_middleware.check_user_role(['admin']), // Ensure this matches your role checks
+// auth_middleware.check_is_admin,
+driver.verifyDriverLicense);
 // Add driver details
 driverRouter.post(
     '/driver-details/:id',
@@ -25,7 +26,7 @@ driverRouter.post(
 );
 // rating related api
 driverRouter.patch('/new-rating',
-    auth_middleware.check_user_role(['driver', 'admin', 'passenger']),
+    // auth_middleware.check_user_role(['driver', 'admin', 'passenger']),
 driver.new_driver_rating)
 driverRouter.get('/get-rating/:driverId',
     auth_middleware.check_user_role(['driver', 'admin', 'passenger']),

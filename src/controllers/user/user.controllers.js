@@ -54,7 +54,7 @@ export const user = {
     
 
     user_details_update: asyncHandler(async (req, res) => {
-        const { full_name, profile_image, city, role, phone_number, email, address, password , user_location} = req.body
+        const { full_name, profile_image, city, role, phone_number, email, address, password } = req.body
         // validation (joi)
         const userValidationSchema = Joi.object({
             full_name: Joi.string(),
@@ -65,13 +65,13 @@ export const user = {
             email: Joi.string().email(),
             address: Joi.string(),
            
-            user_location: Joi.object({
-                type: Joi.string().valid('Point').required(),
-                coordinates: Joi.array().items(
-                    Joi.number().min(-180).max(180), // Longitude
-                    Joi.number().min(-90).max(90)    // Latitude
-                ).length(2).required()
-            }).required(),
+            // user_location: Joi.object({
+            //     type: Joi.string().valid('Point').required(),
+            //     coordinates: Joi.array().items(
+            //         Joi.number().min(-180).max(180), // Longitude
+            //         Joi.number().min(-90).max(90)    // Latitude
+            //     ).length(2).required()
+            // }).required(),
             password: Joi.string().min(8).max(15)
         })
         const { error } = userValidationSchema.validate(req.body)
