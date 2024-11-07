@@ -5,7 +5,7 @@ import { jwt_token_verify } from "../utils/jwt.js";
 
 export const auth_middleware = {
     check_user_role: (roles) => asyncHandler(async (req, res, next) => {
-        const token = req.header('Authorization')?.replace('Bearer ', '') || req.body.token; // Ensure the token is stripped correctly
+        const token = req.header('Authorization') || req.body.token; // Ensure the token is stripped correctly
         if (!token) return res.status(401).json(new ApiResponse(401, {}, 'Unauthorized user'));
     
         const verify_token = jwt_token_verify(token);

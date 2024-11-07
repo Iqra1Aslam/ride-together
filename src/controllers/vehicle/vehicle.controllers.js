@@ -116,255 +116,7 @@ vehicle_verification: asyncHandler(async (req, res) => {
   }
 }),
 
-      
-    
-
-    
-    //         const { passengerLocation, requestedTime } = req.body;
-    
-    //         // Validate input
-    //         if (!passengerLocation || !requestedTime) {
-    //             return res.status(400).json({ message: 'Passenger location and requested time are required.' });
-    //         }
-    
-    //         // Get the current date and construct the requested date with the time
-    //         const currentDate = new Date();
-    //         const dateString = currentDate.toDateString(); // e.g., "Sat Aug 24 2024"
-    //         const requestedDateString = `${dateString} ${requestedTime}`;
-    //         const requestedDate = new Date(requestedDateString);
-    
-    //         // Define the time range: 15 minutes before and after the requested time
-    //         const timeBefore = new Date(requestedDate);
-    //         timeBefore.setMinutes(requestedDate.getMinutes() - 15);
-    
-    //         const timeAfter = new Date(requestedDate);
-    //         timeAfter.setMinutes(requestedDate.getMinutes() + 15);
-    
-    //         // Debugging information
-    //         console.log('Passenger Location:', passengerLocation);
-    //         console.log('Requested Time:', requestedTime);
-    //         console.log('Time Before:', timeBefore.toISOString());
-    //         console.log('Time After:', timeAfter.toISOString());
-    
-    //         // Use $geoNear to find nearby rides within 5km and the specified time range
-    //         const nearbyRides = await PublishRide.aggregate([
-    //             {
-    //                 $geoNear: {
-    //                     near: passengerLocation, // The passenger's location as a GeoJSON point
-    //                     distanceField: 'distance', // The field in the results that contains the calculated distance
-    //                     maxDistance: 5000, // Distance in meters (5km)
-    //                     spherical: true, // Enable spherical calculations for geospatial data
-    //                     key: 'pickup_location', // The field in the collection that stores location data
-    //                 },
-    //             },
-    //             {
-    //  
-    //         }
-    
-    //         res.json(nearbyRides);
-    //     } catch (err) {
-    //         console.error('Error finding nearby rides:', err);
-    //         res.status(500).json({ error: 'Failed to find nearby rides' });
-    //     }
-    // }),
-    
-      
-    // is_nearestVehicle: asyncHandler(async (req, res) => {
-    //   try {
-    //     const { passengerLocation, requestedTime } = req.body;
-    
-    //     // Validate input
-    //     if (!passengerLocation || !requestedTime) {
-    //       return res.status(400).json({ message: 'Passenger location and requested time are required.' });
-    //     }
-    
-    //     // Construct the requested date with the time
-    //     const currentDate = new Date();
-    //     const dateString = currentDate.toDateString();
-    //     const requestedDateString = `${dateString} ${requestedTime}`;
-    //     const requestedDate = new Date(requestedDateString);
-    
-    //     // Define the time range: 15 minutes before and after the requested time
-    //     const timeBefore = new Date(requestedDate);
-    //     timeBefore.setMinutes(requestedDate.getMinutes() - 15);
-    
-    //     const timeAfter = new Date(requestedDate);
-    //     timeAfter.setMinutes(requestedDate.getMinutes() + 15);
-    
-    //     // Use $geoNear to find nearby rides within 5km and the specified time range
-    //     const nearbyRides = await PublishRide.aggregate([
-    //       {
-    //         $geoNear: {
-    //           near: passengerLocation,
-    //           distanceField: 'distance',
-    //           maxDistance: 5000,
-    //           spherical: true,
-    //           key: 'pickup_location',
-    //         },
-    //       },
-    //       {
-    //         $match: {
-    //           starttime: {
-    //             $gte: timeBefore,
-    //             $lte: timeAfter,
-    //           },
-    //           status: 'waiting',
-    //         },
-    //       },
-    //       // Lookup vehicle details
-    //       {
-    //         $lookup: {
-    //           from: 'vehicles',
-    //           localField: 'driverId',
-    //           foreignField: 'driver',
-    //           as: 'vehicleDetails',
-    //         },
-    //       },
-    //       {
-    //         $unwind: {
-    //           path: '$vehicleDetails',
-    //           preserveNullAndEmptyArrays: true,
-    //         },
-    //       },
-    //       // Lookup driver details
-    //       {
-    //         $lookup: {
-    //           from: 'users', // Collection name is 'drivers'
-    //           localField: 'driverId', // Referencing the driverId from PublishRide
-    //           foreignField: 'drivers', // Matching with the _id of the drivers collection
-    //           as: 'driverDetails', // Output array field to store joined data
-    //         },
-    //       },
-    //       {
-    //         $unwind: {
-    //           path: '$driverDetails',
-    //           preserveNullAndEmptyArrays: true, // Allow rides without driver details
-    //         },
-    //       },
-    //       {
-    //         $project: {
-    //           driverId: 1,
-    //           pickup_location: 1,
-    //           dropLocation: 1,
-    //           date: 1,
-    //           starttime: 1,
-    //           endtime: 1,
-    //           numSeats: 1,
-    //           pricePerSeat: 1,
-    //           status: 1,
-    //           distance: 1,
-    //           'vehicleDetails.vehicle_model': 1,
-    //           'vehicleDetails.vehicle_color': 1,
-    //           'vehicleDetails.vehicle_plate_number': 1,
-    //           'vehicleDetails.number_of_seats': 1,
-    //           'vehicleDetails.vehicle_image': 1,
-    //           'driverDetails.name': 1, // Include the driver's name
-    //           'driverDetails.phone': 1, // Include the driver's phone
-    //         },
-    //       },
-    //     ]);
-    
-    //     // Log nearby rides found
-    //     console.log('Nearby Rides:', nearbyRides);
-    
-    //     // Respond with nearby rides or an error if none found
-    //     if (nearbyRides.length === 0) {
-    //       return res.status(404).json({ message: 'No rides found nearby' });
-    //     }
-    
-    //     res.json(nearbyRides);
-    //   } catch (err) {
-    //     console.error('Error finding nearby rides:', err);
-    //     res.status(500).json({ error: 'Failed to find nearby rides' });
-    //   }
-    // }),
-
-
-//new
-// is_nearestVehicle: asyncHandler(async (req, res) => {
-//   try {
-//     const { passengerLocation, requestedTime } = req.body;
-
-//     // Validate input
-//     if (!passengerLocation || !requestedTime) {
-//       return res.status(400).json({ message: 'Passenger location and requested time are required.' });
-//     }
-
-//     // Construct the requested date with the time
-//     const currentDate = new Date();
-//     const dateString = currentDate.toDateString();
-//     const requestedDateString = `${dateString} ${requestedTime}`;
-//     const requestedDate = new Date(requestedDateString);
-
-//     // Define the time range: 15 minutes before and after the requested time
-//     const timeBefore = new Date(requestedDate);
-//     timeBefore.setMinutes(requestedDate.getMinutes() - 15);
-//     const timeAfter = new Date(requestedDate);
-//     timeAfter.setMinutes(requestedDate.getMinutes() + 15);
-
-//     // Use $geoNear to find nearby rides within 5km and the specified time range
-//     const nearbyRides = await PublishRide.aggregate([
-//       {
-//         $geoNear: {
-//           near: passengerLocation,
-//           distanceField: 'distance',
-//           maxDistance: 5000,
-//           spherical: true,
-//           key: 'pickup_location',
-//         },
-//       },
-//       {
-//         $match: {
-//           starttime: { $gte: timeBefore, $lte: timeAfter },
-//           status: { $in: ['waiting', 'requested'] },
-//           numSeats: { $lte: 4 },
-//         },
-//       },
-//       {
-//         $project: {
-//           driverId: 1,
-//           pickup_location: 1,
-//           dropLocation: 1,
-//           date: 1,
-//           starttime: 1,
-//           endtime: 1,
-//           numSeats: 1,
-//           pricePerSeat: 1,
-//           status: 1,
-//           distance: 1,
-//           'vehicleDetails.vehicle_model': 1,
-//           'vehicleDetails.vehicle_color': 1,
-//           'vehicleDetails.vehicle_plate_number': 1,
-//           'vehicleDetails.number_of_seats': 1,
-//           'vehicleDetails.vehicle_image': 1,
-//           'driverDetails.name': 1,
-//           'driverDetails.phone': 1,
-//         },
-//       },
-//     ]);
-
-//     // Ride ki status ko update karna hai jab koi user ride book karta hai
-//     if (nearbyRides.length > 0) {
-//       nearbyRides.forEach(async (ride) => {
-//         ride.status = 'booked';
-//         await ride.save();
-//       });
-//     }
-
-//     // Log nearby rides found
-//     console.log('Nearby Rides:', nearbyRides);
-
-//     // Respond with nearby rides or an error if none found
-//     if (nearbyRides.length === 0) {
-//       return res.status(404).json({ message: 'No rides found nearby' });
-//     }
-//     res.json(nearbyRides);
-//   } catch (error) {
-//     console.error('Error finding nearby rides:', error);
-//     res.status(500).json({ error: 'Failed to find nearby rides' });
-//   }
-// }),
-
+ 
 is_nearestVehicle: asyncHandler(async (req, res) => {
   try {
     const { passengerLocation, requestedTime } = req.body;
@@ -463,27 +215,7 @@ is_nearestVehicle: asyncHandler(async (req, res) => {
     res.status(500).json({ error: 'Failed to find nearby rides' });
   }
 }),
-
-
-
-
-
-
-
-
-
-    
-  
-    
-    
-    
-    
-    
-
-    
-    
- 
-      publish_ride: asyncHandler(async (req, res) => {
+publish_ride: asyncHandler(async (req, res) => {
         const { pickup_location, dropLocation, date, starttime, endtime, numSeats, pricePerSeat} = req.body;
         const driverId = req.user_id; // Assuming user ID is stored in req.user_id
       
@@ -755,10 +487,44 @@ getBookedPassengers: asyncHandler(async (req, res) => {
 
     return res.status(200).json({ message: 'Ride matched successfully', ride });
   }),
+ 
   bookRide: asyncHandler(async (req, res) => {
-    const { passengerId, driverId } = req.body;
+    const { passengerId, driverId, pickupLocation, requestedDate, requestedTime } = req.body;
 
     try {
+        // Validate driverId and passengerId
+        if (!mongoose.Types.ObjectId.isValid(driverId) || !mongoose.Types.ObjectId.isValid(passengerId)) {
+            return res.status(400).json(new ApiResponse(400, {}, 'Invalid driverId or passengerId.'));
+        }
+
+        // Find driver and passenger
+        const driver = await User.findById(driverId);
+        const passenger = await User.findById(passengerId);
+
+        if (!driver) {
+            return res.status(404).json(new ApiResponse(404, {}, 'Driver not found.'));
+        }
+        if (!passenger) {
+            return res.status(404).json(new ApiResponse(404, {}, 'Passenger not found.'));
+        }
+
+        // Validate date and time
+        const dateObj = new Date(requestedDate);
+        if (isNaN(dateObj.getTime())) {
+            return res.status(400).json(new ApiResponse(400, {}, 'Invalid date format. Use a valid date.'));
+        }
+
+        const timeRegex = /^(\d{1,2}:\d{2})(\s?[APap][Mm])?$/;
+        if (!timeRegex.test(requestedTime)) {
+            return res.status(400).json(new ApiResponse(400, {}, 'Invalid time format. Use HH:MM AM/PM.'));
+        }
+
+        const requestedDateTimeString = `${requestedDate} ${requestedTime}`;
+        const requestedDateTimeObj = new Date(requestedDateTimeString);
+        if (isNaN(requestedDateTimeObj.getTime())) {
+            return res.status(400).json(new ApiResponse(400, {}, 'Invalid requested time.'));
+        }
+
         // Find an active ride by driverId
         const ride = await PublishRide.findOne({ driverId: driverId, status: 'active' });
 
@@ -771,21 +537,36 @@ getBookedPassengers: asyncHandler(async (req, res) => {
         }
 
         // Add passenger to the ride's bookedPassengers array
-        ride.bookedPassengers.push(passengerId);
+        ride.bookedPassengers.push({ passengerId });  // Add passengerId as an object
+
+        // Decrease available seats
         ride.availableSeats -= 1;
+
+        // Update ride details
+        ride.pickupLocation = pickupLocation;
+        ride.requestedDate = dateObj;
+        ride.requestedTime = requestedDateTimeObj;
 
         // If seats are full, mark the ride as completed
         if (ride.availableSeats === 0) {
             ride.status = 'completed';
         }
 
+        // Save the ride
         await ride.save();
 
-        return res.status(200).json(new ApiResponse(200, { ride }, 'Passenger added to ride successfully.'));
+        // Populate passenger details (including gender) for the booked passengers
+        const populatedRide = await PublishRide.findById(ride._id).populate({
+            path: 'bookedPassengers.passengerId',  // Populate passengerId within bookedPassengers
+            select: 'gender',  // Select gender field from the User schema
+        });
+
+        return res.status(200).json(new ApiResponse(200, { populatedRide }, 'Passenger added to ride successfully.'));
     } catch (error) {
         return res.status(500).json(new ApiResponse(500, {}, 'Error booking ride', error.message));
     }
 }),
+
 acceptPassenger: asyncHandler(async (req, res) => {
   const { driverId, passengerId } = req.body;
 
