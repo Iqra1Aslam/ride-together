@@ -64,8 +64,8 @@ const publishRideSchema = new Schema({
       passengerId: { type: Schema.Types.ObjectId, ref: 'User' },
       passengerDetails: {
         id: { type: Schema.Types.ObjectId, ref: 'User' },
-        name: { type: String },
-        gender: { type: String }
+     
+       
       }
     }
   ],
