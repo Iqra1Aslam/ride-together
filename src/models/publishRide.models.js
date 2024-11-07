@@ -18,11 +18,6 @@ const publishRideSchema = new Schema({
     ref: 'User',
     required: true
   },
-
-  driverAvailability:{
-    type: Boolean,
-    default: true
-  },
   
   vehicleId: { // Reference to the vehicle
     type: Schema.Types.ObjectId,
@@ -77,8 +72,8 @@ const publishRideSchema = new Schema({
   
   status: {
     type: String,
-    enum: ['active','waiting', 'requested', 'accepted', 'completed', 'cancelled'],
-    default: 'waiting'
+    enum: ['waiting', 'requested','active', 'accepted', 'completed', 'cancelled'],
+    default: 'active'
   }
 });
 
