@@ -13,7 +13,7 @@ export const user = {
         //validation
         const userValidationSchema = Joi.object({
             city: Joi.string().valid('Lahore').required(),
-            // role: Joi.string().valid('driver', 'passenger').required(),
+            role: Joi.string().valid('driver', 'passenger').required(),
             full_name: Joi.string().min(3).max(15).required(),
             gender: Joi.string().min(3).max(15).required(),
             phone_number: Joi.string().min(11).max(11).required()
