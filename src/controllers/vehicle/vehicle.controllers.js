@@ -436,20 +436,34 @@ acceptAndBookRide: asyncHandler(async (req, res) => {
 
 // Controller function for fetching booked passengers
 getBookedPassengers: asyncHandler(async (req, res) => {
-  const rideId = req.params.rideId;
-
+  
   try {
-      const ride = await PublishRide.findById(rideId);
-      if (!ride) {
-          return res.status(404).json({ message: "Ride not found" });
-      }
+    const { rideId } = req.params;
 
-      // Continue processing if ride is found
-      const bookedPassengers = ride.bookedPassengers; // Array of booked passengers
-      res.status(200).json({ bookedPassengers });
-  } catch (error) {
-      res.status(500).json({ message: "Server Error" });
-  }
+    // Find the ride by its ID
+    const ride = await PublishRide.findById(rideId).populate('bookedPassengers.passengerId', 'full_name gender'); 
+    // Populate passenger details within bookedPassengers array
+    
+    if (!ride) {
+        return res.status(404).json({ message: 'Ride not found' });
+    }
+
+    // Check if there are booked passengers
+    if (!ride.bookedPassengers || ride.bookedPassengers.length === 0) {
+        return res.status(200).json({ message: 'No passengers booked for this ride' });
+    }
+
+    // Respond with the list of booked passengers
+    res.status(200).json({
+        rideId: ride._id,
+        bookedPassengers: ride.bookedPassengers
+    });
+} catch (error) {
+    console.error('Error fetching booked passengers:', error);
+    res.status(500).json({ message: 'Server error' });
+}
+
+
 }),
 
 
@@ -563,7 +577,7 @@ bookRide: asyncHandler(async (req, res) => {
           select: 'gender',  // Select gender field from the User schema
       });
 
-      return res.status(200).json(new ApiResponse(200, { populatedRide }, 'Passenger added to ride successfully.'));
+      return res.status(200).json(new ApiResponse(200, { populatedRide }, 'Passenger request added to ride successfully.'));
   } catch (error) {
       return res.status(500).json(new ApiResponse(500, {}, 'Error booking ride', error.message));
   }
