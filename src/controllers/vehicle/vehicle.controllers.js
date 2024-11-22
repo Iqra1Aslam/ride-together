@@ -414,83 +414,86 @@ getBookedPassengers: asyncHandler(async (req, res) => {
   }
 }),
 bookRide: asyncHandler(async (req, res) => {
-    const { passengerId, driverId, pickupLocation, requestedDate, requestedTime } = req.body;
+  const { passengerId, driverId, pickupLocation, requestedDate, requestedTime } = req.body;
 
-    try {
-        // Validate driverId and passengerId
-        if (!mongoose.Types.ObjectId.isValid(driverId) || !mongoose.Types.ObjectId.isValid(passengerId)) {
-            return res.status(400).json(new ApiResponse(400, {}, 'Invalid driverId or passengerId.'));
-        }
+  try {
+      // Validate driverId and passengerId
+      if (!mongoose.Types.ObjectId.isValid(driverId) || !mongoose.Types.ObjectId.isValid(passengerId)) {
+          return res.status(400).json(new ApiResponse(400, {}, 'Invalid driverId or passengerId.'));
+      }
 
-        // Find driver and passenger
-        const driver = await User.findById(driverId);
-        const passenger = await User.findById(passengerId);
+      // Find driver and passenger
+      const driver = await User.findById(driverId);
+      const passenger = await User.findById(passengerId);
 
-        if (!driver) {
-            return res.status(404).json(new ApiResponse(404, {}, 'Driver not found.'));
-        }
-        if (!passenger) {
-            return res.status(404).json(new ApiResponse(404, {}, 'Passenger not found.'));
-        }
+      if (!driver) {
+          return res.status(404).json(new ApiResponse(404, {}, 'Driver not found.'));
+      }
+      if (!passenger) {
+          return res.status(404).json(new ApiResponse(404, {}, 'Passenger not found.'));
+      }
 
-        // Validate date and time
-        const dateObj = new Date(requestedDate);
-        if (isNaN(dateObj.getTime())) {
-            return res.status(400).json(new ApiResponse(400, {}, 'Invalid date format. Use a valid date.'));
-        }
+      // Validate date and time
+      const dateObj = new Date(requestedDate);
+      if (isNaN(dateObj.getTime())) {
+          return res.status(400).json(new ApiResponse(400, {}, 'Invalid date format. Use a valid date.'));
+      }
 
-        const timeRegex = /^(\d{1,2}:\d{2})(\s?[APap][Mm])?$/;
-        if (!timeRegex.test(requestedTime)) {
-            return res.status(400).json(new ApiResponse(400, {}, 'Invalid time format. Use HH:MM AM/PM.'));
-        }
+      const timeRegex = /^(\d{1,2}:\d{2})(\s?[APap][Mm])?$/;
+      if (!timeRegex.test(requestedTime)) {
+          return res.status(400).json(new ApiResponse(400, {}, 'Invalid time format. Use HH:MM AM/PM.'));
+      }
 
-        const requestedDateTimeString = `${requestedDate} ${requestedTime}`;
-        const requestedDateTimeObj = new Date(requestedDateTimeString);
-        if (isNaN(requestedDateTimeObj.getTime())) {
-            return res.status(400).json(new ApiResponse(400, {}, 'Invalid requested time.'));
-        }
+      const requestedDateTimeString = `${requestedDate} ${requestedTime}`;
+      const requestedDateTimeObj = new Date(requestedDateTimeString);
+      if (isNaN(requestedDateTimeObj.getTime())) {
+          return res.status(400).json(new ApiResponse(400, {}, 'Invalid requested time.'));
+      }
 
-        // Find an active ride by driverId
-        const ride = await PublishRide.findOne({ driverId: driverId, status: 'active' });
+      // Find an active ride by driverId
+      const ride = await PublishRide.findOne({ driverId: driverId, status: 'active' });
 
-        // Check if an active ride was found and if seats are available
-        if (!ride) {
-            return res.status(404).json(new ApiResponse(404, {}, 'No active ride found for this driver.'));
-        }
-        if (ride.availableSeats === 0) {
-            return res.status(400).json(new ApiResponse(400, {}, 'No seats available for this ride.'));
-        }
+      if (!ride) {
+          return res.status(404).json(new ApiResponse(404, {}, 'No active ride found for this driver.'));
+      }
+      if (ride.availableSeats === 0) {
+          return res.status(400).json(new ApiResponse(400, {}, 'No seats available for this ride.'));
+      }
 
-        // Add passenger to the ride's bookedPassengers array
-        ride.bookedPassengers.push({ passengerId });  // Add passengerId as an object
+      // Calculate the discounted price
+      const totalSeats = ride.numSeats;
+      const remainingSeats = ride.availableSeats;
+      const discountPercentage = 0.2; // 20%
+      const discountedPrice = ride.pricePerSeat * Math.pow(1 - discountPercentage, totalSeats - remainingSeats);
 
-        // Decrease available seats
-        ride.availableSeats -= 1;
+      // Update ride details
+      ride.bookedPassengers.push({ passengerId }); // Add passengerId as an object
+      ride.availableSeats -= 1;
+      ride.pickupLocation = pickupLocation;
+      ride.requestedDate = dateObj;
+      ride.requestedTime = requestedDateTimeObj;
+      ride.pricePerSeat = discountedPrice.toFixed(2); // Update pricePerSeat with discounted price
 
-        // Update ride details
-        ride.pickupLocation = pickupLocation;
-        ride.requestedDate = dateObj;
-        ride.requestedTime = requestedDateTimeObj;
+      // If seats are full, mark the ride as completed
+      if (ride.availableSeats === 0) {
+          ride.status = 'completed';
+      }
 
-        // If seats are full, mark the ride as completed
-        if (ride.availableSeats === 0) {
-            ride.status = 'completed';
-        }
+      // Save the ride
+      await ride.save();
 
-        // Save the ride
-        await ride.save();
+      // Populate passenger details (including gender) for the booked passengers
+      const populatedRide = await PublishRide.findById(ride._id).populate({
+          path: 'bookedPassengers.passengerId', // Populate passengerId within bookedPassengers
+          select: 'gender', // Select gender field from the User schema
+      });
 
-        // Populate passenger details (including gender) for the booked passengers
-        const populatedRide = await PublishRide.findById(ride._id).populate({
-            path: 'bookedPassengers.passengerId',  // Populate passengerId within bookedPassengers
-            select: 'gender',  // Select gender field from the User schema
-        });
-
-        return res.status(200).json(new ApiResponse(200, { populatedRide }, 'Passenger added to ride successfully.'));
-    } catch (error) {
-        return res.status(500).json(new ApiResponse(500, {}, 'Error booking ride', error.message));
-    }
+      return res.status(200).json(new ApiResponse(200, { populatedRide }, 'Passenger added to ride successfully.'));
+  } catch (error) {
+      return res.status(500).json(new ApiResponse(500, {}, 'Error booking ride', error.message));
+  }
 }),
+
 acceptPassenger: asyncHandler(async (req, res) => {
   const { driverId, passengerId } = req.body;
 
