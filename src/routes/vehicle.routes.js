@@ -26,12 +26,9 @@ vehicleRouter.route('/is_nearestVehicle').post(
 vehicleRouter.route('/publish-ride').post(
     auth_middleware.check_user_role(['driver', 'admin', 'passenger']),
      vehicle.publish_ride);
-
-// Add the new route for sending requests
-vehicleRouter.route('/send-request').post(auth_middleware.check_user_role(['driver', 'passenger']), vehicle.send_request);
 vehicleRouter.route('/driver/ride-requests/:driverId').
 get(
-    auth_middleware.check_user_role(['driver', 'passenger']),
+    // auth_middleware.check_user_role(['driver', 'passenger']),
      vehicle.fetch_ride_requests);
 
 vehicleRouter.route('/accept-and-book').post(

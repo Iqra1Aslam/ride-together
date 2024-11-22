@@ -16,7 +16,7 @@ export const driver = {
                     name: name,
                     phone: phone,
                     cnic: cnic,
-                     // Save FCM token
+                     
                 },
                 { new: true, upsert: true }
             );
