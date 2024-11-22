@@ -28,6 +28,9 @@ const userSchema = new Schema(
         city: {
             type: String
         },
+        gender: { type: String,
+            default: 'men'
+         },
         is_verified: {
             type: Boolean,
             default: false
