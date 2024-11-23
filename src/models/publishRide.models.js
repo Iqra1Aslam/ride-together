@@ -62,14 +62,7 @@ const publishRideSchema = new Schema({
   bookedPassengers: [ // Array to store booked passengers
     {
       passengerId: { type: Schema.Types.ObjectId, ref: 'User' },
-      passengerDetails: {
-        id: { type: Schema.Types.ObjectId, ref: 'User' },
-        // requestedDate: {
-        //   type: Date,
-        //   required: true
-        // }
-       
-      }
+      status: { type: String, enum: ['requested', 'accepted', 'rejected'], default: 'requested' },
     }
   ],
   

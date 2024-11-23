@@ -331,91 +331,139 @@ publish_ride: asyncHandler(async (req, res) => {
     
 // accept api 
 acceptAndBookRide: asyncHandler(async (req, res) => {
-  
-    const { rideId, passengerId } = req.body;
+  const { rideId, passengerId } = req.body;
 
-    try {
-        // Validate rideId and passengerId
-        if (!mongoose.Types.ObjectId.isValid(rideId) || !mongoose.Types.ObjectId.isValid(passengerId)) {
-            return res.status(400).json(new ApiResponse(400, {}, 'Invalid rideId or passengerId.'));
-        }
+  try {
+      // Validate rideId and passengerId
+      if (!mongoose.Types.ObjectId.isValid(rideId) || !mongoose.Types.ObjectId.isValid(passengerId)) {
+          return res.status(400).json(new ApiResponse(400, {}, 'Invalid rideId or passengerId.'));
+      }
 
-        // Find the ride and passenger
-        const ride = await PublishRide.findById(rideId).populate('bookedPassengers.passengerId');
-        const passenger = await User.findById(passengerId);
+      // Find the ride and ensure it exists
+      const ride = await PublishRide.findById(rideId);
+      if (!ride) {
+          return res.status(404).json(new ApiResponse(404, {}, 'Ride not found.'));
+      }
 
-        if (!ride) {
-            return res.status(404).json(new ApiResponse(404, {}, 'Ride not found.'));
-        }
+      // Check if the passenger is already in bookedPassengers
+      const passengerIndex = ride.bookedPassengers.findIndex(
+          (booking) => booking.passengerId.toString() === passengerId.toString()
+      );
 
-        if (!passenger) {
-            return res.status(404).json(new ApiResponse(404, {}, 'Passenger not found.'));
-        }
+      if (passengerIndex === -1) {
+          return res.status(400).json(new ApiResponse(400, {}, 'Passenger has not requested this ride.'));
+      }
 
-      
+      // Update passenger status to "accepted"
+      ride.bookedPassengers[passengerIndex].status = 'accepted';
 
-        // Check if the passenger is already booked for this ride
-        const isPassengerAlreadyBooked = ride.bookedPassengers.some(
-            (booking) => booking.passengerId._id.toString() === passengerId.toString()
-        );
+     
 
-        if (!isPassengerAlreadyBooked) {
-            return res.status(400).json(new ApiResponse(400, {}, 'This passenger has not requested this ride.'));
-        }
+      // If no seats are left, mark the ride as "completed"
+      if (ride.availableSeats === 0) {
+          ride.status = 'completed';
+      }
 
-        // If the ride has no available seats left, mark it as completed
-        if (ride.availableSeats === 0) {
-            ride.status = 'completed';
-        }
+      // Save the updated ride
+      await ride.save();
 
-        // Save the updated ride status and booking confirmation
-        await ride.save();
+      // Return the updated ride with populated passenger details
+      const updatedRide = await PublishRide.findById(ride._id).populate({
+          path: 'bookedPassengers.passengerId',
+          select: 'full_name gender city', // Include necessary fields
+      });
 
-        // Return the populated ride with passenger details
-        const populatedRide = await PublishRide.findById(ride._id).populate({
-            path: 'bookedPassengers.passengerId',
-            select: 'full_name gender city',  // Include necessary fields
-        });
-
-        return res.status(200).json(new ApiResponse(200, { populatedRide }, 'Passenger booking accepted successfully.'));
-    } catch (error) {
-        console.error('Error accepting the ride:', error);
-        return res.status(500).json(new ApiResponse(500, {}, 'Error accepting the ride', error.message));
-    }
+      return res.status(200).json(new ApiResponse(200, { updatedRide }, 'Passenger booking accepted successfully.'));
+  } catch (error) {
+      console.error('Error accepting and booking the ride:', error);
+      return res.status(500).json(new ApiResponse(500, {}, 'Error accepting the ride.', error.message));
+  }
 }),
 
+// acceptAndBookRide: asyncHandler(async (req, res) => {
+  
+//     const { rideId, passengerId } = req.body;
 
+//     try {
+//         // Validate rideId and passengerId
+//         if (!mongoose.Types.ObjectId.isValid(rideId) || !mongoose.Types.ObjectId.isValid(passengerId)) {
+//             return res.status(400).json(new ApiResponse(400, {}, 'Invalid rideId or passengerId.'));
+//         }
+
+//         // Find the ride and passenger
+//         const ride = await PublishRide.findById(rideId).populate('bookedPassengers.passengerId');
+//         const passenger = await User.findById(passengerId);
+
+//         if (!ride) {
+//             return res.status(404).json(new ApiResponse(404, {}, 'Ride not found.'));
+//         }
+
+//         if (!passenger) {
+//             return res.status(404).json(new ApiResponse(404, {}, 'Passenger not found.'));
+//         }
+//         // Check if the passenger is already booked for this ride
+//         const isPassengerAlreadyBooked = ride.bookedPassengers.some(
+//             (booking) => booking.passengerId._id.toString() === passengerId.toString()
+//         );
+
+//         if (!isPassengerAlreadyBooked) {
+//             return res.status(400).json(new ApiResponse(400, {}, 'This passenger has not requested this ride.'));
+//         }
+
+//         // If the ride has no available seats left, mark it as completed
+//         if (ride.availableSeats === 0) {
+//             ride.status = 'completed';
+//         }
+//         // passengerBooking.status = 'accepted';
+//         // Save the updated ride status and booking confirmation
+//         await ride.save();
+        
+//         // Return the populated ride with passenger details
+//         const populatedRide = await PublishRide.findById(ride._id).populate({
+//             path: 'bookedPassengers.passengerId',
+//             select: 'full_name gender city',  // Include necessary fields
+//         });
+
+//         return res.status(200).json(new ApiResponse(200, { populatedRide }, 'Passenger booking accepted successfully.'));
+//     } catch (error) {
+//         console.error('Error accepting the ride:', error);
+//         return res.status(500).json(new ApiResponse(500, {}, 'Error accepting the ride', error.message));
+//     }
+// }),
 
 // Controller function for fetching booked passengers
 getBookedPassengers: asyncHandler(async (req, res) => {
-  
   try {
     const { rideId } = req.params;
 
-    // Find the ride by its ID
-    const ride = await PublishRide.findById(rideId).populate('bookedPassengers.passengerId', 'full_name gender'); 
-    // Populate passenger details within bookedPassengers array
-    
+    // Find the ride by its ID and populate passenger details
+    const ride = await PublishRide.findById(rideId).populate(
+      'bookedPassengers.passengerId',
+      'full_name gender city'
+    );
+
     if (!ride) {
-        return res.status(404).json({ message: 'Ride not found' });
+      return res.status(404).json({ message: 'Ride not found' });
     }
 
-    // Check if there are booked passengers
-    if (!ride.bookedPassengers || ride.bookedPassengers.length === 0) {
-        return res.status(200).json({ message: 'No passengers booked for this ride' });
+    // Filter booked passengers with status "accepted"
+    const acceptedPassengers = ride.bookedPassengers.filter(
+      (booking) => booking.status === 'accepted'
+    );
+
+    if (acceptedPassengers.length === 0) {
+      return res.status(200).json({ message: 'No accepted passengers for this ride' });
     }
 
-    // Respond with the list of booked passengers
+    // Respond with the list of accepted passengers
     res.status(200).json({
-        rideId: ride._id,
-        bookedPassengers: ride.bookedPassengers
+      rideId: ride._id,
+      acceptedPassengers,
     });
-} catch (error) {
+  } catch (error) {
     console.error('Error fetching booked passengers:', error);
     res.status(500).json({ message: 'Server error' });
-}
-
-
+  }
 }),
 //  send request
 bookRide: asyncHandler(async (req, res) => {
