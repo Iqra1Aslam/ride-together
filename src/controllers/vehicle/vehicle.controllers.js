@@ -154,6 +154,8 @@ is_nearestVehicle: asyncHandler(async (req, res) => {
         },
       },
       {
+       
+        
         $match: {
           starttime: { $gte: timeBefore, $lte: timeAfter },
           status: 'active', // Only include active rides

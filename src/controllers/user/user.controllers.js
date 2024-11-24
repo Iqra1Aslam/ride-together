@@ -61,17 +61,9 @@ export const user = {
             profile_image: Joi.string(),
             city: Joi.string().valid('Lahore'),
             role: Joi.string().valid('driver', 'passenger'),
-            phone_number: Joi.string().required().min(10).max(13).pattern(/^[0-9]+$/),
+            phone_number: Joi.string().required(),
             email: Joi.string().email(),
             address: Joi.string(),
-           
-            // user_location: Joi.object({
-            //     type: Joi.string().valid('Point').required(),
-            //     coordinates: Joi.array().items(
-            //         Joi.number().min(-180).max(180), // Longitude
-            //         Joi.number().min(-90).max(90)    // Latitude
-            //     ).length(2).required()
-            // }).required(),
             password: Joi.string().min(8).max(15)
         })
         const { error } = userValidationSchema.validate(req.body)
