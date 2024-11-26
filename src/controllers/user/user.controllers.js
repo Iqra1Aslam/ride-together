@@ -65,7 +65,23 @@ export const user = {
           
       }),
     
-
+      user_token_get: asyncHandler(async (req, res) => {
+        const user_id = req.user_id;
+      
+        try {
+          const user = await User.findById(user_id);
+      
+          if (!user || !user.pushToken) {
+            return res.status(404).json({ error: 'Push token not found for this user' });
+          }
+      
+          res.status(200).json({ pushToken: user.pushToken });
+        } catch (error) {
+          console.error('Error fetching push token:', error);
+          res.status(500).json({ error: 'Internal server error' });
+        }
+      }),
+      
    
       
 
