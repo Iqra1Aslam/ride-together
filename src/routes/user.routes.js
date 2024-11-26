@@ -15,7 +15,7 @@ userRouter.route('/token-add').patch(
     auth_middleware.check_user_role(['passenger', 'driver', 'admin']),
     user.user_token_add
   );
-  userRouter.route('/token-get').get(
+  userRouter.route('/token-get/:id').get(
     
     auth_middleware.check_user_role(['passenger', 'driver', 'admin']),
     user.user_token_get

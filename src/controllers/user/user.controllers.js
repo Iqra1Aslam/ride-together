@@ -66,7 +66,7 @@ export const user = {
       }),
     
       user_token_get: asyncHandler(async (req, res) => {
-        const user_id = req.user_id;
+        const user_id = req.params.id;
       
         try {
           const user = await User.findById(user_id);
