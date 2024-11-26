@@ -48,6 +48,29 @@ const publishRideSchema = new Schema({
       required: true
     }
   },
+  pickupLocation: {
+    type: {
+      type: String,
+      enum: ['Point'],
+      required: true
+    },
+    coordinates: {
+      type: [Number],
+      required: true
+    }
+  },
+  
+  drop_location: {
+    type: {
+      type: String,
+      enum: ['Point'],
+      required: true
+    },
+    coordinates: {
+      type: [Number],
+      required: true
+    }
+  },
   
   date: { type: Date, required: true },
   starttime: { type: Date, required: true },
@@ -58,7 +81,7 @@ const publishRideSchema = new Schema({
   initialPricePerSeat: { type: Number, required: false }, // Store initial price for discount calculation
   availableSeats: { type: Number, default:4 },
   pricePerSeat: { type: Number, required: true },
-  
+  discountedPrice:{type: Number},
   bookedPassengers: [ // Array to store booked passengers
     {
       passengerId: { type: Schema.Types.ObjectId, ref: 'User' },
