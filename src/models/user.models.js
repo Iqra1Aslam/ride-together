@@ -22,6 +22,7 @@ const userSchema = new Schema(
         email: {
             type: String
         },
+        pushToken: { type: String, default: '' }, 
         address: {
             type: String
         },

@@ -2,7 +2,7 @@ import { User } from "../../models/user.models.js";
 import { ApiResponse } from "../../services/ApiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import Joi from 'joi'
-import { upload_single_on_cloudinary } from "../../utils/cloudinary.js";
+// import { upload_single_on_cloudinary } from "../../utils/cloudinary.js";
 
 export const user = {
     user_details_add: asyncHandler(async (req, res) => {
@@ -40,18 +40,34 @@ export const user = {
     }),
 
 
-    user_profile_image_add: asyncHandler(async (req, res) => {
+    user_token_add: asyncHandler(async (req, res) => {
         const user_id = req.user_id;
-        const image = req.file;
-    
-        const profile_image = await upload_single_on_cloudinary(image);
-        const updatedUser = await User.findByIdAndUpdate(
-          user_id,
-          { profile_image: profile_image?.url }
-        );
-        res.status(200).json(new ApiResponse(200, {}, 'User profile updated'));
+        
+            const {  pushToken } = req.body;
+          
+            if (!user_id  || !pushToken) {
+              return res.status(400).json({ error: 'User ID and push token are required' });
+            }
+          
+            try {
+              // Find and update user with the push token
+              const user = await User.findByIdAndUpdate(
+                user_id,
+                { pushToken },
+                { new: true, upsert: true } // Create if doesn't exist
+              );
+          
+              res.status(200).json({ message: 'Push token saved successfully', user });
+            } catch (error) {
+              console.error('Error saving push token:', error);
+              res.status(500).json({ error: 'Internal server error' });
+            }
+          
       }),
     
+
+   
+      
 
     user_details_update: asyncHandler(async (req, res) => {
         const { full_name, profile_image, city, role, phone_number, email, address, password } = req.body
