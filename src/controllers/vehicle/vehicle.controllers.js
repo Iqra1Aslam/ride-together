@@ -323,11 +323,10 @@ publish_ride: asyncHandler(async (req, res) => {
         }).populate({
             path: 'bookedPassengers.passengerId',
             select: 'full_name gender city', // Include necessary fields from passengers
-        });
-      // Modify the query to include both 'active' and 'completed' rides
-      // const rides = await PublishRide.find({ driverId: driverId, status: { $in: ['active'] } })
-      //   .populate('bookedPassengers.passengerId', 'full_name gender') // Populate passenger details within bookedPassengers array
-      //   .populate('driverId', 'name'); // Populate driver details
+          })
+          .select('pickupLocation drop_location status bookedPassengers');
+        
+    
     
       if (!rides.length) {
         return res.status(404).json({ message: 'No requests found' });
