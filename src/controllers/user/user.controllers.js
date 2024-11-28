@@ -2,15 +2,11 @@ import { User } from "../../models/user.models.js";
 import { ApiResponse } from "../../services/ApiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import Joi from 'joi'
-// import { upload_single_on_cloudinary } from "../../utils/cloudinary.js";
-
 export const user = {
     user_details_add: asyncHandler(async (req, res) => {
-        //get from body
+       
         const { full_name, phone_number, gender, city, role } = req.body
         const user_id = req.user_id
-
-        //validation
         const userValidationSchema = Joi.object({
             city: Joi.string().valid('Lahore').required(),
             role: Joi.string().valid('driver', 'passenger').required(),
@@ -21,7 +17,6 @@ export const user = {
         const { error } = userValidationSchema.validate(req.body)
         if (error) return res.status(400).json(new ApiResponse(error.code || 400, error, error.message))
 
-        //find user 
         const user = await User.findByIdAndUpdate(
             user_id,
             {
@@ -50,11 +45,10 @@ export const user = {
             }
           
             try {
-              // Find and update user with the push token
               const user = await User.findByIdAndUpdate(
                 user_id,
                 { pushToken },
-                { new: true, upsert: true } // Create if doesn't exist
+                { new: true, upsert: true } 
               );
           
               res.status(200).json({ message: 'Push token saved successfully', user });
@@ -81,13 +75,9 @@ export const user = {
           res.status(500).json({ error: 'Internal server error' });
         }
       }),
-      
-   
-      
-
     user_details_update: asyncHandler(async (req, res) => {
         const { full_name, city, role, phone_number, email } = req.body
-        // validation (joi)
+    
         const userValidationSchema = Joi.object({
             full_name: Joi.string(),
             
@@ -116,14 +106,7 @@ export const user = {
             { new: true }
         )
         return res.status(200).json(new ApiResponse(200, user, 'user updated successfully'))
-    }),
-
-    user_details_delete: asyncHandler(async (req, res) => {
-        const user_id = req.params.id
-        await User.findByIdAndDelete(user_id)
-        return res.status(400).json(new ApiResponse(400, {}, 'only admin delete'))
     })
-
-    // api for update user role abc to admin (PATCH)
+   
 
 }
