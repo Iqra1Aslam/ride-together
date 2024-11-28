@@ -76,12 +76,12 @@ export const user = {
         }
       }),
     user_details_update: asyncHandler(async (req, res) => {
-        const { full_name, city, role, phone_number, email } = req.body
+        const { full_name, role, phone_number, email } = req.body
     
         const userValidationSchema = Joi.object({
             full_name: Joi.string(),
             
-            city: Joi.string().valid('Lahore'),
+            
             role: Joi.string().valid('driver', 'passenger'),
             phone_number: Joi.string().required(),
             email: Joi.string().email(),
@@ -96,7 +96,7 @@ export const user = {
             {
                 full_name: full_name,
                
-                city: city,
+                
                 role: role,
                 phone_number: phone_number,
                 email: email,
