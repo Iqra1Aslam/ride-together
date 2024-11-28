@@ -275,6 +275,7 @@ publish_ride: asyncHandler(async (req, res) => {
           endtime: endTimeObj,
           numSeats,
           pricePerSeat,
+          
           status: 'active',
           driverId: driverId,
           vehicleId: vehicle._id, // Link the vehicle's ID
@@ -440,7 +441,7 @@ bookRide: asyncHandler(async (req, res) => {
     ride.bookedPassengers.push({ passengerId, status: "requested" });
     ride.availableSeats -= 1;
     ride.pickupLocation =pickupLocation;
-      ride.drop_location=dropLocation;
+      ride.dropLocation=dropLocation;
       // / Calculate the discounted pricefare
       const totalSeats = ride.numSeats;
       const remainingSeats = ride.availableSeats;

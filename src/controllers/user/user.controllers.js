@@ -86,17 +86,17 @@ export const user = {
       
 
     user_details_update: asyncHandler(async (req, res) => {
-        const { full_name, profile_image, city, role, phone_number, email, address, password } = req.body
+        const { full_name, city, role, phone_number, email } = req.body
         // validation (joi)
         const userValidationSchema = Joi.object({
             full_name: Joi.string(),
-            profile_image: Joi.string(),
+            
             city: Joi.string().valid('Lahore'),
             role: Joi.string().valid('driver', 'passenger'),
             phone_number: Joi.string().required(),
             email: Joi.string().email(),
-            address: Joi.string(),
-            password: Joi.string().min(8).max(15)
+           
+           
         })
         const { error } = userValidationSchema.validate(req.body)
         if (error) return res.status(400).json(new ApiResponse(error.code || 400, error, error.message))
@@ -105,13 +105,13 @@ export const user = {
             user_id,
             {
                 full_name: full_name,
-                profile_image: profile_image,
+               
                 city: city,
                 role: role,
                 phone_number: phone_number,
                 email: email,
-                address: address,
-                // password: password
+                
+                
             },
             { new: true }
         )
