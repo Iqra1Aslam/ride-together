@@ -14,7 +14,7 @@ const userSchema = new Schema(
         role: {
             type: String,
             enum: ['driver', 'passenger', 'admin'],
-            default: 'driver'
+            default: 'passenger'
         },
         phone_number: {
             type: String

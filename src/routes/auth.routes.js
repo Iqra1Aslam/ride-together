@@ -8,8 +8,7 @@ authRouter.route('/register').post(auth.register)
 authRouter.route('/login').post(auth.login)
 authRouter.route('/verify-otp').post(auth_middleware.check_user_role(['driver', 'passenger']), 
 auth.verify_otp)
-// add by iqra
+
 authRouter.route('/forget').post(auth_middleware.check_user_role(['driver', 'passenger']),
 auth.forget_password)
 authRouter.route('/reset').post(auth_middleware.check_user_role(['driver', 'passenger']),auth.reset_password)
-authRouter.route('/test').get(auth.test)
