@@ -7,10 +7,7 @@ const userSchema = new Schema(
         full_name: {
             type: String
         },
-        profile_image: {
-            type: String,
-            default: 'https://shorturl.at/mpFGT'
-        },
+     
         role: {
             type: String,
             enum: ['driver', 'passenger', 'admin'],
