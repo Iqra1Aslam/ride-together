@@ -1,13 +1,10 @@
 import { Driver } from "../../models/driver.models.js";
 import { ApiResponse } from "../../services/ApiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
-
-
-
 export const driver = {
     driver_details_add: asyncHandler(async (req, res) => {
         const user_id = req.user_id;
-        const { name, phone, cnic,  } = req.body;
+        const { name, phone, cnic,role  } = req.body;
     
         try {
             const driver = await Driver.findByIdAndUpdate(
@@ -16,7 +13,7 @@ export const driver = {
                     name: name,
                     phone: phone,
                     cnic: cnic,
-                     
+                     role:role
                 },
                 { new: true, upsert: true }
             );
