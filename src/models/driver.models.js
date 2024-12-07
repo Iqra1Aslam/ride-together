@@ -56,11 +56,6 @@ const driver_schema = new Schema({
         // required: true, // CNIC is required
     },
 
-    driver_lisence_image: {
-        type: String,
-        required:false,
-        default: 'https://l1nk.dev/MTZj7'// License image URL is required
-    },
     ratings: [
         {
             userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
