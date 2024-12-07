@@ -19,8 +19,9 @@ app.use('/api/v1/driver', driverRouter)
 app.use('/api/v1/vehicle', vehicleRouter)
 app.use('/api/v1/admin', router)
 
-app.get("/api/test", (req, res) => {
-    return res.json({message:"hello word"})
-})
+app.get("/", (req, res) => {
+    res.send("Welcome to the API!");
+  })
+  
 
 export { app }
