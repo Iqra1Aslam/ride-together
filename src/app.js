@@ -4,9 +4,9 @@ import cors from 'cors'
 const app = express()
 
 app.use(express.json({ limit: '1mb' }))
-// app.use(cors({
+app.use(cors({
 //     origin: ['http://localhost:5173/', 'http://localhost:3000/']
-// }))
+}))
 
 import { userRouter } from './routes/user.routes.js'
 import { authRouter } from './routes/auth.routes.js'

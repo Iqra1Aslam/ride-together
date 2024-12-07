@@ -11,7 +11,7 @@ const HOST = process.env.HOST || 'localhost'
 
 connectDB()
     .then(info => {
-        // app.listen(PORT, HOST, () => 
+        
             console.log(`Server listening on PORT ${PORT}`)
     })
     .catch(error => {
